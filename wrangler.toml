@@ -1,0 +1,19 @@
+name = "shopping-list-pwa"
+main = "src/worker.ts"
+compatibility_date = "2023-12-01"
+
+[vars]
+ENVIRONMENT = "production"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "d1-shopping-list"
+database_id = "f3d3d408-6227-409b-9437-f038d7f6afb0"
+
+[build]
+command = "npm run build"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+

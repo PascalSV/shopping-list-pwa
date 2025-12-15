@@ -1,0 +1,22 @@
+{
+  "name": "shopping-list-pwa",
+  "version": "1.0.0",
+  "description": "Shopping List PWA with Cloudflare Workers and D1",
+  "main": "src/worker.ts",
+  "scripts": {
+    "dev": "wrangler dev --local",
+    "dev:debug": "wrangler dev --local",
+    "dev:remote": "wrangler dev --remote",
+    "deploy": "wrangler deploy",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20231218.0",
+    "typescript": "^5.3.3",
+    "wrangler": "^4.54.0"
+  },
+  "dependencies": {
+    "@cloudflare/kv-asset-handler": "^0.3.0",
+    "onsenui": "^2.12.8"
+  }
+}

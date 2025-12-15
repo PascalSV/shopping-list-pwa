@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#007aff">
+    <title>Einkaufsliste</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    
+    <!-- OnsenUI CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsenui.css">
+    <link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsen-css-components.min.css">
+    
+    <!-- Google Fonts - Inter (modern, clean font) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <!-- Login Page -->
+    <ons-page id="login-page">
+        <ons-toolbar>
+            <div class="center">Einkaufsliste</div>
+        </ons-toolbar>
+        
+        <div class="content login-content">
+            <div class="login-container">
+                <div class="login-icon">🛒</div>
+                <h2>Willkommen</h2>
+                <p>Bitte Passwort eingeben</p>
+                
+                <ons-input id="password-input" type="password" placeholder="Passwort" 
+                           modifier="underbar" class="login-input"></ons-input>
+                
+                <ons-button id="login-button" modifier="large">
+                    Anmelden
+                </ons-button>
+                
+                <div id="login-error" class="error-message"></div>
+            </div>
+        </div>
+    </ons-page>
+
+    <!-- Main Shopping List Page -->
+    <ons-page id="main-page" style="display: none;">
+        <ons-toolbar>
+            <div class="center">Einkaufsliste</div>
+            <div class="right">
+                <ons-toolbar-button id="logout-button">
+                    <ons-icon icon="md-power"></ons-icon>
+                </ons-toolbar-button>
+            </div>
+        </ons-toolbar>
+        
+        <div class="content">
+            <!-- Shopping List Items -->
+            <ons-list id="shopping-list" class="shopping-list">
+                <!-- Items will be dynamically added here -->
+            </ons-list>
+            
+            <!-- Search Results -->
+            <ons-list id="search-results" class="search-results" style="display: none;">
+                <!-- Search results will be dynamically added here -->
+            </ons-list>
+            
+            <div id="empty-message" class="empty-message" style="display: none;">
+                <div class="empty-icon">✓</div>
+                <p>Fertig! Deine Einkaufsliste ist leer.</p>
+            </div>
+        </div>
+        
+        <div class="footer-search">
+            <ons-search-input id="search-input" placeholder="Artikel suchen..."></ons-search-input>
+        </div>
+    </ons-page>
+
+    <!-- OnsenUI JS -->
+    <script src="https://unpkg.com/onsenui/js/onsenui.min.js"></script>
+    <script src="/app.js"></script>
+</body>
+</html>

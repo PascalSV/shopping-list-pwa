@@ -1,0 +1,29 @@
+# Add node_modules
+node_modules/
+
+# Add dist
+dist/
+
+# Add wrangler output
+.wrangler/
+
+# Add OS files
+.DS_Store
+
+# Add editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Add log files
+*.log
+npm-debug.log*
+
+# Add environment files
+.env
+.env.local
+.dev.vars
+
+# Add local seed data (optional - remove if you want to commit it)
+seed-local.sql
