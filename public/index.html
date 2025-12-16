@@ -60,12 +60,12 @@
         
         <div class="content">
             <!-- Shopping List Items -->
-            <ons-list id="shopping-list" class="shopping-list">
+            <ons-list id="shopping-list" class="shopping-list" modifier="inset">
                 <!-- Items will be dynamically added here -->
             </ons-list>
             
             <!-- Search Results -->
-            <ons-list id="search-results" class="search-results" style="display: none;">
+            <ons-list id="search-results" class="search-results" modifier="inset" style="display: none;">
                 <!-- Search results will be dynamically added here -->
             </ons-list>
             
@@ -76,7 +76,7 @@
         </div>
         
         <div class="footer-search">
-            <ons-search-input id="search-input" placeholder="Artikel suchen..."></ons-search-input>
+            <ons-input id="search-input" placeholder="Artikel suchen..." modifier="underbar" type="text"></ons-input>
         </div>
     </ons-page>
 

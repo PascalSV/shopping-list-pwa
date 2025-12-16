@@ -114,21 +114,21 @@ async function loadShoppingList() {
 // Create shopping list item element
 function createShoppingListItem(item) {
     const li = document.createElement('ons-list-item');
-    li.className = 'list-item fade-in';
+    li.className = 'list-item fade-in inset';
     li.setAttribute('tappable', '');
 
     const content = document.createElement('div');
     content.className = 'list-item__center';
 
     const title = document.createElement('div');
-    title.className = 'item-title';
+    title.className = 'list-item__title';
     title.textContent = item.article_name;
 
     content.appendChild(title);
 
     if (item.remark) {
         const remark = document.createElement('div');
-        remark.className = 'item-remark';
+        remark.className = 'list-item__subtitle';
         remark.textContent = item.remark;
         content.appendChild(remark);
     }

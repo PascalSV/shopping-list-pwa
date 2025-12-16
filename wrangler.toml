@@ -2,6 +2,10 @@ name = "shopping-list-pwa"
 main = "src/worker.ts"
 compatibility_date = "2023-12-01"
 
+[[routes]]
+pattern = "shopping-list.everyday-apps.org"
+custom_domain = true
+
 [vars]
 ENVIRONMENT = "production"
 
