@@ -1,7 +1,7 @@
 {
-  "name": "Shopping List",
-  "short_name": "Shopping",
-  "description": "A modern shopping list PWA",
+  "name": "Einkaufszettel",
+  "short_name": "Einkaufen",
+  "description": "Eine moderne Einkaufszettel App",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -21,6 +21,7 @@
       "purpose": "any maskable"
     }
   ],
+  "apple-touch-icon": "/icon.svg",
   "categories": ["shopping", "productivity"],
   "screenshots": []
 }

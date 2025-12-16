@@ -23,6 +23,7 @@ const editRemark = document.getElementById('edit-remark');
 const cancelEditButton = document.getElementById('cancel-edit');
 const saveEditButton = document.getElementById('save-edit');
 const deleteArticleButton = document.getElementById('delete-article');
+const wakeLockBtn = document.getElementById('wake-lock-btn');
 
 // State for editing
 let currentEditItem = null;
@@ -57,6 +58,7 @@ function init() {
     cancelEditButton.addEventListener('click', closeEditModal);
     saveEditButton.addEventListener('click', saveEdit);
     deleteArticleButton.addEventListener('click', deleteArticle);
+    wakeLockBtn.addEventListener('click', toggleWakeLock);
 }
 
 // Show/Hide pages
@@ -489,6 +491,36 @@ function showNotification(message, type = 'info') {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
     }, 2000);
+}
+
+// Wake Lock functionality
+function toggleWakeLock() {
+    if (!navigator.wakeLock) {
+        alert("Ihr Gerät unterstützt Wake Lock nicht. Versuchen Sie es auf einem Android-Telefon oder einem Gerät mit iOS 16.4 oder höher!");
+    }
+    else if (window.currentWakeLock && !window.currentWakeLock.released) {
+        releaseScreen();
+    }
+    else {
+        lockScreen();
+    }
+}
+
+async function lockScreen() {
+    try {
+        window.currentWakeLock = await navigator.wakeLock.request();
+        wakeLockBtn.style.opacity = '1';
+        wakeLockBtn.style.backgroundColor = '#81c784';
+    }
+    catch (err) {
+        alert('Wake Lock Fehler: ' + err);
+    }
+}
+
+async function releaseScreen() {
+    window.currentWakeLock.release();
+    wakeLockBtn.style.opacity = '';
+    wakeLockBtn.style.backgroundColor = '';
 }
 
 // Register service worker for PWA

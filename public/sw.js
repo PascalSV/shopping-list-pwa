@@ -5,9 +5,6 @@ const urlsToCache = [
     '/styles.css',
     '/app.js',
     '/manifest.json',
-    'https://unpkg.com/onsenui/css/onsenui.css',
-    'https://unpkg.com/onsenui/css/onsen-css-components.min.css',
-    'https://unpkg.com/onsenui/js/onsenui.min.js',
     'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'
 ];
 
@@ -40,6 +37,11 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
+    // Skip non-http(s) requests (chrome-extension, etc.)
+    if (!event.request.url.startsWith('http')) {
+        return;
+    }
+
     // Skip API calls - always fetch from network
     if (event.request.url.includes('/api/')) {
         event.respondWith(fetch(event.request));
