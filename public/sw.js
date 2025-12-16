@@ -1,11 +1,14 @@
-const CACHE_NAME = 'shopping-list-v1';
+const CACHE_NAME = 'shopping-list-v2';
 const urlsToCache = [
     '/',
     '/index.html',
     '/styles.css',
     '/app.js',
     '/manifest.json',
-    'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'
+    '/fonts/inter-latin.woff2',
+    '/icon.svg',
+    '/icon-192.png',
+    '/icon-512.png'
 ];
 
 // Install event - cache resources
@@ -60,20 +63,27 @@ self.addEventListener('fetch', (event) => {
                 const fetchRequest = event.request.clone();
 
                 return fetch(fetchRequest).then((response) => {
-                    // Check if valid response
-                    if (!response || response.status !== 200 || response.type !== 'basic') {
+                    // Check if we received a valid response
+                    if (!response || response.status !== 200) {
                         return response;
                     }
 
-                    // Clone the response
-                    const responseToCache = response.clone();
+                    // Only cache if it's a basic type (same-origin) or cors
+                    if (response.type === 'basic' || response.type === 'cors') {
+                        // Clone the response
+                        const responseToCache = response.clone();
 
-                    caches.open(CACHE_NAME)
-                        .then((cache) => {
-                            cache.put(event.request, responseToCache);
-                        });
+                        caches.open(CACHE_NAME)
+                            .then((cache) => {
+                                cache.put(event.request, responseToCache);
+                            });
+                    }
 
                     return response;
+                }).catch((error) => {
+                    // Network fetch failed, try to return cached version
+                    console.log('Fetch failed for:', event.request.url, error);
+                    return caches.match(event.request);
                 });
             })
     );

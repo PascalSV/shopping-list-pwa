@@ -541,12 +541,17 @@ document.addEventListener('visibilitychange', () => {
     }
 });
 
-// Register service worker for PWA
-if ('serviceWorker' in navigator) {
+// Register service worker for PWA (skip on localhost to avoid dev issues)
+if ('serviceWorker' in navigator && !window.location.hostname.includes('localhost')) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
             .then(registration => console.log('Service Worker registered'))
             .catch(error => console.log('Service Worker registration failed:', error));
+    });
+} else if ('serviceWorker' in navigator) {
+    // Unregister service worker on localhost
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+        registrations.forEach(registration => registration.unregister());
     });
 }
 
