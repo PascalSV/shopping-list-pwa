@@ -1,6 +1,6 @@
 interface Env {
   DB: D1Database;
-  PASSWORD: string;
+  password: string;
   ASSETS: Fetcher;
 }
 
@@ -39,7 +39,7 @@ export default {
       if (url.pathname === '/api/login' && request.method === 'POST') {
         const body = await request.json() as { password: string };
         
-        if (body.password === env.PASSWORD) {
+        if (body.password === env.password) {
           return new Response(JSON.stringify({ success: true, token: 'authenticated' }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
