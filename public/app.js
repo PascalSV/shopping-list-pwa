@@ -113,27 +113,26 @@ async function loadShoppingList() {
 
 // Create shopping list item element
 function createShoppingListItem(item) {
-    const li = document.createElement('ons-list-item');
-    li.className = 'list-item fade-in inset';
-    li.setAttribute('tappable', '');
-
-    const content = document.createElement('div');
-    content.className = 'list-item__center';
+    const li = document.createElement('li');
+    li.className = 'list-item fade-in';
 
     const title = document.createElement('div');
-    title.className = 'list-item__title';
+    title.className = 'list-item-title';
     title.textContent = item.article_name;
 
-    content.appendChild(title);
+    li.appendChild(title);
 
     if (item.remark) {
-        const remark = document.createElement('div');
-        remark.className = 'list-item__subtitle';
-        remark.textContent = item.remark;
-        content.appendChild(remark);
+        const subtitle = document.createElement('div');
+        subtitle.className = 'list-item-subtitle';
+        subtitle.textContent = item.remark;
+        li.appendChild(subtitle);
     }
 
-    li.appendChild(content);
+    const chevron = document.createElement('div');
+    chevron.className = 'chevron';
+    chevron.innerHTML = '›';
+    li.appendChild(chevron);
 
     // Remove item on tap
     li.addEventListener('click', async () => {
@@ -212,24 +211,24 @@ async function searchArticles(query) {
 
 // Create article list item element
 function createArticleListItem(article) {
-    const li = document.createElement('ons-list-item');
+    const li = document.createElement('li');
     li.className = 'list-item fade-in';
-    li.setAttribute('tappable', '');
-
-    const content = document.createElement('div');
-    content.className = 'list-item__center';
 
     const name = document.createElement('div');
-    name.className = 'article-name';
+    name.className = 'list-item-title';
     name.textContent = article.name;
 
     const info = document.createElement('div');
-    info.className = 'article-info';
+    info.className = 'list-item-subtitle';
     info.textContent = `Bereich: ${article.area} • ${article.frequency}x verwendet`;
 
-    content.appendChild(name);
-    content.appendChild(info);
-    li.appendChild(content);
+    li.appendChild(name);
+    li.appendChild(info);
+
+    const chevron = document.createElement('div');
+    chevron.className = 'chevron';
+    chevron.innerHTML = '›';
+    li.appendChild(chevron);
 
     // Add to shopping list on tap
     li.addEventListener('click', async () => {
@@ -267,10 +266,17 @@ async function addToShoppingList(articleId) {
 
 // Show notification
 function showNotification(message, type = 'info') {
-    ons.notification.toast(message, {
-        timeout: 2000,
-        animation: 'fall'
-    });
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => toast.classList.add('show'), 10);
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 2000);
 }
 
 // Register service worker for PWA

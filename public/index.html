@@ -2,18 +2,14 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#007aff">
     <title>Einkaufsliste</title>
     
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icon-192.png">
-    
-    <!-- OnsenUI CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsenui.css">
-    <link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsen-css-components.min.css">
     
     <!-- Google Fonts - Inter (modern, clean font) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,10 +20,10 @@
 </head>
 <body>
     <!-- Login Page -->
-    <ons-page id="login-page">
-        <ons-toolbar>
-            <div class="center">Einkaufsliste</div>
-        </ons-toolbar>
+    <div id="login-page" class="page">
+        <header class="toolbar">
+            <h1>Einkaufsliste</h1>
+        </header>
         
         <div class="content login-content">
             <div class="login-container">
@@ -35,39 +31,42 @@
                 <h2>Willkommen</h2>
                 <p>Bitte Passwort eingeben</p>
                 
-                <ons-input id="password-input" type="password" placeholder="Passwort" 
-                           modifier="underbar" class="login-input"></ons-input>
+                <input id="password-input" type="password" placeholder="Passwort" class="input-underbar">
                 
-                <ons-button id="login-button" modifier="large">
+                <button id="login-button" class="button-large">
                     Anmelden
-                </ons-button>
+                </button>
                 
                 <div id="login-error" class="error-message"></div>
             </div>
         </div>
-    </ons-page>
+    </div>
 
     <!-- Main Shopping List Page -->
-    <ons-page id="main-page" style="display: none;">
-        <ons-toolbar>
-            <div class="center">Einkaufsliste</div>
-            <div class="right">
-                <ons-toolbar-button id="logout-button">
-                    <ons-icon icon="md-power"></ons-icon>
-                </ons-toolbar-button>
-            </div>
-        </ons-toolbar>
+    <div id="main-page" class="page" style="display: none;">
+        <header class="toolbar">
+            <button id="back-button" class="toolbar-button" aria-label="Zurück">
+                ‹ Listen
+            </button>
+            <button id="logout-button" class="toolbar-button" aria-label="Abmelden">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+            </button>
+        </header>
         
         <div class="content">
             <!-- Shopping List Items -->
-            <ons-list id="shopping-list" class="shopping-list" modifier="inset">
+            <ul id="shopping-list" class="list-inset">
                 <!-- Items will be dynamically added here -->
-            </ons-list>
+            </ul>
             
             <!-- Search Results -->
-            <ons-list id="search-results" class="search-results" modifier="inset" style="display: none;">
+            <ul id="search-results" class="list-inset search-results" style="display: none;">
                 <!-- Search results will be dynamically added here -->
-            </ons-list>
+            </ul>
             
             <div id="empty-message" class="empty-message" style="display: none;">
                 <div class="empty-icon">✓</div>
@@ -76,12 +75,10 @@
         </div>
         
         <div class="footer-search">
-            <ons-input id="search-input" placeholder="Artikel suchen..." modifier="underbar" type="text"></ons-input>
+            <input id="search-input" type="text" placeholder="Artikel suchen..." class="input-underbar">
         </div>
-    </ons-page>
+    </div>
 
-    <!-- OnsenUI JS -->
-    <script src="https://unpkg.com/onsenui/js/onsenui.min.js"></script>
     <script src="/app.js"></script>
 </body>
 </html>
