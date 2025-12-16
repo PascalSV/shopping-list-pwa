@@ -39,8 +39,6 @@ export default {
       if (url.pathname === '/api/login' && request.method === 'POST') {
         const body = await request.json() as { password: string };
         
-        console.log('Login attempt - stored password:', env.password, 'provided:', body.password);
-        
         if (body.password === env.password) {
           return new Response(JSON.stringify({ success: true, token: 'authenticated' }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }

@@ -70,6 +70,10 @@ function showLoginPage() {
 function showMainPage() {
     loginPage.style.display = 'none';
     mainPage.style.display = 'block';
+    // Automatically activate wake lock
+    if (navigator.wakeLock) {
+        lockScreen();
+    }
 }
 
 // Login handler
@@ -111,6 +115,10 @@ async function handleLogin() {
 function handleLogout() {
     authToken = null;
     localStorage.removeItem('authToken');
+    // Release wake lock on logout
+    if (window.currentWakeLock && !window.currentWakeLock.released) {
+        releaseScreen();
+    }
     showLoginPage();
     shoppingList.innerHTML = '';
     searchResults.innerHTML = '';
@@ -522,6 +530,16 @@ async function releaseScreen() {
     wakeLockBtn.style.opacity = '';
     wakeLockBtn.style.backgroundColor = '';
 }
+
+// Handle page visibility changes to re-acquire wake lock
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && authToken && navigator.wakeLock) {
+        // Re-acquire wake lock when page becomes visible
+        if (!window.currentWakeLock || window.currentWakeLock.released) {
+            lockScreen();
+        }
+    }
+});
 
 // Register service worker for PWA
 if ('serviceWorker' in navigator) {
