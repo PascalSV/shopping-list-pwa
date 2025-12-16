@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#007aff">
@@ -74,8 +75,37 @@
             </div>
         </div>
         
-        <div class="footer-search">
-            <input id="search-input" type="text" placeholder="Artikel suchen..." class="input-underbar">
+        <!-- Edit Modal Overlay -->
+        <div id="edit-modal" class="edit-modal" style="display: none;">
+            <div class="edit-modal-content">
+                <h2>Artikel bearbeiten</h2>
+                <div class="edit-form">
+                    <label>Artikelname</label>
+                    <input id="edit-article-name" type="text" class="input-underbar" placeholder="Artikelname">
+                    
+                    <label>Bemerkung</label>
+                    <input id="edit-remark" type="text" class="input-underbar" placeholder="Bemerkung (optional)">
+                    
+                    <div class="edit-buttons">
+                        <button id="cancel-edit" class="button-large cancel-edit-button">Abbrechen</button>
+                        <button id="save-edit" class="button-large">Speichern</button>
+                    </div>
+                    
+                    <button id="delete-article" class="button-large delete-article-button">Artikel löschen</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-search" id="footer-search">
+            <div id="frequent-items" class="frequent-items" style="display: none;">
+                <ul id="frequent-items-list" class="list-inset frequent-list">
+                    <!-- Frequent items will be dynamically added here -->
+                </ul>
+            </div>
+            <div class="search-input-wrapper">
+                <input id="search-input" type="text" placeholder="Artikel suchen..." class="input-underbar">
+                <button id="cancel-search" class="cancel-button">Abbrechen</button>
+            </div>
         </div>
     </div>
 

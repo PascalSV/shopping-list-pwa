@@ -13,6 +13,19 @@ const shoppingList = document.getElementById('shopping-list');
 const searchResults = document.getElementById('search-results');
 const searchInput = document.getElementById('search-input');
 const emptyMessage = document.getElementById('empty-message');
+const footerSearch = document.getElementById('footer-search');
+const frequentItems = document.getElementById('frequent-items');
+const frequentItemsList = document.getElementById('frequent-items-list');
+const cancelButton = document.getElementById('cancel-search');
+const editModal = document.getElementById('edit-modal');
+const editArticleName = document.getElementById('edit-article-name');
+const editRemark = document.getElementById('edit-remark');
+const cancelEditButton = document.getElementById('cancel-edit');
+const saveEditButton = document.getElementById('save-edit');
+const deleteArticleButton = document.getElementById('delete-article');
+
+// State for editing
+let currentEditItem = null;
 
 // Initialize app
 function init() {
@@ -30,6 +43,12 @@ function init() {
     });
     logoutButton.addEventListener('click', handleLogout);
     searchInput.addEventListener('input', handleSearch);
+    searchInput.addEventListener('focus', expandFooter);
+    searchInput.addEventListener('blur', collapseFooter);
+    cancelButton.addEventListener('click', handleCancelSearch);
+    cancelEditButton.addEventListener('click', closeEditModal);
+    saveEditButton.addEventListener('click', saveEdit);
+    deleteArticleButton.addEventListener('click', deleteArticle);
 }
 
 // Show/Hide pages
@@ -122,21 +141,59 @@ function createShoppingListItem(item) {
 
     li.appendChild(title);
 
-    if (item.remark) {
-        const subtitle = document.createElement('div');
-        subtitle.className = 'list-item-subtitle';
-        subtitle.textContent = item.remark;
-        li.appendChild(subtitle);
-    }
+    // Always add subtitle for consistent height
+    const subtitle = document.createElement('div');
+    subtitle.className = 'list-item-subtitle';
+    subtitle.textContent = item.remark || '';
+    li.appendChild(subtitle);
 
     const chevron = document.createElement('div');
     chevron.className = 'chevron';
     chevron.innerHTML = '›';
     li.appendChild(chevron);
 
-    // Remove item on tap
-    li.addEventListener('click', async () => {
-        await removeFromShoppingList(item.id);
+    // Long press and tap detection
+    let pressTimer;
+    let isLongPress = false;
+
+    li.addEventListener('touchstart', (e) => {
+        isLongPress = false;
+        pressTimer = setTimeout(() => {
+            isLongPress = true;
+            openEditModal(item);
+        }, 500); // 500ms for long press
+    });
+
+    li.addEventListener('touchend', (e) => {
+        clearTimeout(pressTimer);
+        if (!isLongPress) {
+            // Short tap - remove item
+            removeFromShoppingList(item.id);
+        }
+    });
+
+    li.addEventListener('touchmove', () => {
+        clearTimeout(pressTimer);
+    });
+
+    // Fallback for mouse events (desktop)
+    li.addEventListener('mousedown', (e) => {
+        isLongPress = false;
+        pressTimer = setTimeout(() => {
+            isLongPress = true;
+            openEditModal(item);
+        }, 500);
+    });
+
+    li.addEventListener('mouseup', (e) => {
+        clearTimeout(pressTimer);
+        if (!isLongPress) {
+            removeFromShoppingList(item.id);
+        }
+    });
+
+    li.addEventListener('mouseleave', () => {
+        clearTimeout(pressTimer);
     });
 
     return li;
@@ -151,7 +208,6 @@ async function removeFromShoppingList(itemId) {
 
         if (response.ok) {
             loadShoppingList();
-            showNotification('Artikel entfernt', 'success');
         }
     } catch (error) {
         console.error('Error removing item:', error);
@@ -165,18 +221,11 @@ function handleSearch(e) {
 
     clearTimeout(searchTimeout);
 
-    if (query.length < 3) {
-        // Show shopping list
-        shoppingList.style.display = 'block';
-        searchResults.style.display = 'none';
-        emptyMessage.style.display = shoppingList.children.length === 0 ? 'block' : 'none';
+    if (query.length < 1) {
+        // Show frequent items again
+        loadFrequentItems();
         return;
     }
-
-    // Hide shopping list and empty message
-    shoppingList.style.display = 'none';
-    emptyMessage.style.display = 'none';
-    searchResults.style.display = 'block';
 
     // Debounce search
     searchTimeout = setTimeout(() => {
@@ -190,17 +239,22 @@ async function searchArticles(query) {
         const response = await fetch(`/api/articles/search?q=${encodeURIComponent(query)}`);
         const articles = await response.json();
 
-        searchResults.innerHTML = '';
+        frequentItemsList.innerHTML = '';
 
         if (articles.length === 0) {
-            const noResults = document.createElement('div');
-            noResults.className = 'empty-message';
-            noResults.innerHTML = '<p>Keine Artikel gefunden</p>';
-            searchResults.appendChild(noResults);
+            // Show the search term as a new article option
+            const newArticle = {
+                id: null,
+                name: query,
+                area: 0,
+                frequency: 0
+            };
+            const listItem = createArticleListItem(newArticle);
+            frequentItemsList.appendChild(listItem);
         } else {
             articles.forEach(article => {
                 const listItem = createArticleListItem(article);
-                searchResults.appendChild(listItem);
+                frequentItemsList.appendChild(listItem);
             });
         }
     } catch (error) {
@@ -218,33 +272,98 @@ function createArticleListItem(article) {
     name.className = 'list-item-title';
     name.textContent = article.name;
 
-    const info = document.createElement('div');
-    info.className = 'list-item-subtitle';
-    info.textContent = `Bereich: ${article.area} • ${article.frequency}x verwendet`;
-
     li.appendChild(name);
-    li.appendChild(info);
-
-    const chevron = document.createElement('div');
-    chevron.className = 'chevron';
-    chevron.innerHTML = '›';
-    li.appendChild(chevron);
 
     // Add to shopping list on tap
     li.addEventListener('click', async () => {
-        await addToShoppingList(article.id);
+        await addToShoppingList(article.id, article.name);
     });
 
     return li;
 }
 
-// Add article to shopping list
-async function addToShoppingList(articleId) {
+// Open edit modal
+function openEditModal(item) {
+    currentEditItem = item;
+    editArticleName.value = item.article_name;
+    editRemark.value = item.remark || '';
+    editModal.style.display = 'flex';
+}
+
+// Close edit modal
+function closeEditModal() {
+    editModal.style.display = 'none';
+    currentEditItem = null;
+    editArticleName.value = '';
+    editRemark.value = '';
+}
+
+// Save edit
+async function saveEdit() {
+    if (!currentEditItem) return;
+
+    const newName = editArticleName.value.trim();
+    const newRemark = editRemark.value.trim();
+
+    if (!newName) {
+        showNotification('Artikelname darf nicht leer sein', 'error');
+        return;
+    }
+
     try {
+        const response = await fetch(`/api/shopping-list/${currentEditItem.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                article_name: newName,
+                remark: newRemark
+            })
+        });
+
+        if (response.ok) {
+            closeEditModal();
+            loadShoppingList();
+            showNotification('Artikel aktualisiert', 'success');
+        }
+    } catch (error) {
+        console.error('Error updating item:', error);
+        showNotification('Fehler beim Aktualisieren', 'error');
+    }
+}
+
+// Delete article from articles list
+async function deleteArticle() {
+    if (!currentEditItem) return;
+
+    try {
+        const response = await fetch(`/api/articles/${currentEditItem.article_id}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            closeEditModal();
+            loadShoppingList();
+        }
+    } catch (error) {
+        console.error('Error deleting article:', error);
+        showNotification('Fehler beim L\u00f6schen', 'error');
+    }
+}
+
+// Add article to shopping list
+async function addToShoppingList(articleId, articleName = null) {
+    try {
+        const body = { article_id: articleId, remark: '' };
+
+        // If articleId is null, include the article name to create a new article
+        if (articleId === null && articleName) {
+            body.article_name = articleName;
+        }
+
         const response = await fetch('/api/shopping-list', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ article_id: articleId, remark: '' })
+            body: JSON.stringify(body)
         });
 
         if (response.ok) {
@@ -262,6 +381,68 @@ async function addToShoppingList(articleId) {
         console.error('Error adding to shopping list:', error);
         showNotification('Fehler beim Hinzufügen', 'error');
     }
+}
+
+// Expand footer to show frequent items
+function expandFooter() {
+    footerSearch.classList.add('expanded');
+    frequentItems.style.display = 'block';
+    loadFrequentItems();
+}
+
+// Collapse footer
+function collapseFooter() {
+    // Delay to allow clicking on frequent items
+    setTimeout(() => {
+        footerSearch.classList.remove('expanded');
+        frequentItems.style.display = 'none';
+    }, 200);
+}
+
+// Handle cancel search button
+function handleCancelSearch() {
+    searchInput.value = '';
+    searchInput.blur();
+    footerSearch.classList.remove('expanded');
+    frequentItems.style.display = 'none';
+}
+
+// Load frequent items (top 4 by frequency)
+async function loadFrequentItems() {
+    try {
+        const response = await fetch('/api/articles/frequent');
+        const articles = await response.json();
+
+        frequentItemsList.innerHTML = '';
+
+        articles.slice(0, 4).forEach(article => {
+            const listItem = createFrequentListItem(article);
+            frequentItemsList.appendChild(listItem);
+        });
+    } catch (error) {
+        console.error('Error loading frequent items:', error);
+    }
+}
+
+// Create frequent list item element
+function createFrequentListItem(article) {
+    const li = document.createElement('li');
+    li.className = 'list-item fade-in';
+
+    const title = document.createElement('div');
+    title.className = 'list-item-title';
+    title.textContent = article.name;
+
+    li.appendChild(title);
+
+    // Add to shopping list on tap
+    li.addEventListener('mousedown', async (e) => {
+        e.preventDefault();
+        await addToShoppingList(article.id, null);
+        searchInput.blur();
+    });
+
+    return li;
 }
 
 // Show notification

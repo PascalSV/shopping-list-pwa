@@ -72,20 +72,32 @@ export default {
 
       // Add item to shopping list
       if (url.pathname === '/api/shopping-list' && request.method === 'POST') {
-        const body = await request.json() as { article_id: number; remark?: string };
+        const body = await request.json() as { article_id: number | null; article_name?: string; remark?: string };
         
+        let articleId = body.article_id;
+
+        // If article_id is null, create a new article with the provided name
+        if (articleId === null && body.article_name) {
+          const insertResult = await env.DB.prepare(`
+            INSERT INTO articles (name, area, frequency)
+            VALUES (?, 0, 0)
+          `).bind(body.article_name).run();
+          
+          articleId = insertResult.meta.last_row_id as number;
+        }
+
         // Insert into shopping list
         await env.DB.prepare(`
           INSERT INTO shopping_list (article_id, remark)
           VALUES (?, ?)
-        `).bind(body.article_id, body.remark || '').run();
+        `).bind(articleId, body.remark || '').run();
 
         // Increment frequency
         await env.DB.prepare(`
           UPDATE articles 
           SET frequency = frequency + 1
           WHERE id = ?
-        `).bind(body.article_id).run();
+        `).bind(articleId).run();
 
         return new Response(JSON.stringify({ success: true }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -105,11 +117,71 @@ export default {
         });
       }
 
+      // Update shopping list item
+      if (url.pathname.startsWith('/api/shopping-list/') && request.method === 'PUT') {
+        const id = url.pathname.split('/').pop();
+        const body = await request.json() as { article_name: string; remark?: string };
+        
+        // First, get the current article_id and name
+        const currentItem = await env.DB.prepare(`
+          SELECT sl.article_id, a.name 
+          FROM shopping_list sl
+          JOIN articles a ON sl.article_id = a.id
+          WHERE sl.id = ?
+        `).bind(id).first() as { article_id: number; name: string } | null;
+
+        if (!currentItem) {
+          return new Response(JSON.stringify({ error: 'Item not found' }), {
+            status: 404,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        // If article name changed, update the article
+        if (body.article_name !== currentItem.name) {
+          await env.DB.prepare(`
+            UPDATE articles 
+            SET name = ?
+            WHERE id = ?
+          `).bind(body.article_name, currentItem.article_id).run();
+        }
+
+        // Update the remark in shopping_list
+        await env.DB.prepare(`
+          UPDATE shopping_list 
+          SET remark = ?
+          WHERE id = ?
+        `).bind(body.remark || '', id).run();
+
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      // Delete article from articles list
+      if (url.pathname.startsWith('/api/articles/') && request.method === 'DELETE') {
+        const id = url.pathname.split('/').pop();
+        
+        // First delete from shopping_list (foreign key constraint)
+        await env.DB.prepare(`
+          DELETE FROM shopping_list WHERE article_id = ?
+        `).bind(id).run();
+
+        // Then delete from articles
+        await env.DB.prepare(`
+          DELETE FROM articles WHERE id = ?
+        `).bind(id).run();
+
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
       // Search articles
       if (url.pathname === '/api/articles/search' && request.method === 'GET') {
         const query = url.searchParams.get('q') || '';
         
-        if (query.length < 3) {
+        if (query.length < 1) {
           return new Response(JSON.stringify([]), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
@@ -122,6 +194,20 @@ export default {
           ORDER BY frequency DESC, name
           LIMIT 20
         `).bind(`%${query}%`).all();
+
+        return new Response(JSON.stringify(result.results), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      // Get frequent articles (top 4 by frequency)
+      if (url.pathname === '/api/articles/frequent' && request.method === 'GET') {
+        const result = await env.DB.prepare(`
+          SELECT id, name, area, frequency
+          FROM articles
+          ORDER BY frequency DESC, name
+          LIMIT 4
+        `).all();
 
         return new Response(JSON.stringify(result.results), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
