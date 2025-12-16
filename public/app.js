@@ -26,6 +26,7 @@ const deleteArticleButton = document.getElementById('delete-article');
 
 // State for editing
 let currentEditItem = null;
+let articlesOnList = new Set();
 
 // Initialize app
 function init() {
@@ -46,6 +47,13 @@ function init() {
     searchInput.addEventListener('focus', expandFooter);
     searchInput.addEventListener('blur', collapseFooter);
     cancelButton.addEventListener('click', handleCancelSearch);
+
+    // Prevent blur when clicking inside the footer area
+    footerSearch.addEventListener('mousedown', (e) => {
+        if (e.target !== searchInput && !searchInput.contains(e.target)) {
+            e.preventDefault();
+        }
+    });
     cancelEditButton.addEventListener('click', closeEditModal);
     saveEditButton.addEventListener('click', saveEdit);
     deleteArticleButton.addEventListener('click', deleteArticle);
@@ -114,12 +122,14 @@ async function loadShoppingList() {
         const items = await response.json();
 
         shoppingList.innerHTML = '';
+        articlesOnList.clear();
 
         if (items.length === 0) {
             emptyMessage.style.display = 'block';
         } else {
             emptyMessage.style.display = 'none';
             items.forEach(item => {
+                articlesOnList.add(item.article_id);
                 const listItem = createShoppingListItem(item);
                 shoppingList.appendChild(listItem);
             });
@@ -207,7 +217,8 @@ async function removeFromShoppingList(itemId) {
         });
 
         if (response.ok) {
-            loadShoppingList();
+            await loadShoppingList();
+            loadFrequentItems();
         }
     } catch (error) {
         console.error('Error removing item:', error);
@@ -268,16 +279,26 @@ function createArticleListItem(article) {
     const li = document.createElement('li');
     li.className = 'list-item fade-in';
 
+    const isOnList = articlesOnList.has(article.id);
+    if (isOnList) {
+        li.classList.add('already-on-list');
+    }
+
     const name = document.createElement('div');
     name.className = 'list-item-title';
     name.textContent = article.name;
 
     li.appendChild(name);
 
-    // Add to shopping list on tap
-    li.addEventListener('click', async () => {
-        await addToShoppingList(article.id, article.name);
-    });
+    // Add to shopping list on tap (only if not already on list)
+    if (!isOnList) {
+        li.addEventListener('click', async () => {
+            // Check again at click time in case the article was added after this item was created
+            if (!articlesOnList.has(article.id)) {
+                await addToShoppingList(article.id, article.name);
+            }
+        });
+    }
 
     return li;
 }
@@ -373,9 +394,9 @@ async function addToShoppingList(articleId, articleName = null) {
             searchResults.innerHTML = '';
             shoppingList.style.display = 'block';
 
-            // Reload shopping list
-            loadShoppingList();
-            showNotification('Zur Einkaufsliste hinzugefügt', 'success');
+            // Reload shopping list and frequent items
+            await loadShoppingList();
+            loadFrequentItems();
         }
     } catch (error) {
         console.error('Error adding to shopping list:', error);
@@ -429,18 +450,28 @@ function createFrequentListItem(article) {
     const li = document.createElement('li');
     li.className = 'list-item fade-in';
 
+    const isOnList = articlesOnList.has(article.id);
+    if (isOnList) {
+        li.classList.add('already-on-list');
+    }
+
     const title = document.createElement('div');
     title.className = 'list-item-title';
     title.textContent = article.name;
 
     li.appendChild(title);
 
-    // Add to shopping list on tap
-    li.addEventListener('mousedown', async (e) => {
-        e.preventDefault();
-        await addToShoppingList(article.id, null);
-        searchInput.blur();
-    });
+    // Add to shopping list on tap (only if not already on list)
+    if (!isOnList) {
+        li.addEventListener('mousedown', async (e) => {
+            e.preventDefault();
+            // Check again at click time in case the article was added after this item was created
+            if (!articlesOnList.has(article.id)) {
+                await addToShoppingList(article.id, null);
+            }
+            searchInput.blur();
+        });
+    }
 
     return li;
 }
