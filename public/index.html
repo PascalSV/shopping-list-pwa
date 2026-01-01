@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f766e" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="stylesheet" href="/styles.css" />
+    <title>Pascals Einkaufsliste</title>
+</head>
+
+<body>
+    <main class="app">
+        <header>
+            <div>
+                <p class="eyebrow">PWA</p>
+                <h1>Pascals Einkaufsliste</h1>
+            </div>
+            <p class="hint">Offline-friendly, auto-synced</p>
+        </header>
+
+        <section class="card">
+            <div id="list-tabs" class="tabs"></div>
+            <h2 id="list-title">Home</h2>
+            <ul id="items" class="items"></ul>
+        </section>
+
+        <section class="input-section">
+            <div id="suggestions" class="suggestions"></div>
+            <form id="add-form" class="add-row">
+                <div class="input-wrapper">
+                    <input id="item-input" type="text" name="label" placeholder="Ich brauche..." autocomplete="off" />
+                    <button id="clear-input" type="button" class="clear-btn" style="display: none;">×</button>
+                </div>
+                <button type="submit">Hinzufügen</button>
+            </form>
+        </section>
+    </main>
+    <script type="module" src="/assets/index.js"></script>
+</body>
+
+</html>

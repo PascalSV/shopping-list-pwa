@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-label="Shopping Lists">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#0f766e" offset="0" />
+      <stop stop-color="#16a34a" offset="1" />
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="32" fill="url(#g)" />
+  <g stroke="#0b1f1a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M60 60h72v88H60z" fill="rgba(255,255,255,0.08)" />
+    <path d="M72 80h48M72 104h48M72 128h32" />
+    <path d="M64 48h64v16H64z" fill="#f8fafc" />
+  </g>
+</svg>

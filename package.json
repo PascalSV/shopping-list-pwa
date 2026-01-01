@@ -1,0 +1,23 @@
+{
+    "name": "shopping-list-pwa",
+    "version": "0.1.0",
+    "description": "Shopping list PWA with Cloudflare Worker backend and D1 storage",
+    "type": "module",
+    "scripts": {
+        "build:client": "esbuild src/client/index.ts --bundle --format=esm --splitting --outdir=public/assets --target=es2020",
+        "build:sw": "esbuild src/client/sw.ts --bundle --format=esm --outfile=public/sw.js --target=es2020",
+        "build": "npm run build:client && npm run build:sw",
+        "dev": "npm run build && wrangler dev --local",
+        "deploy": "npm run build && wrangler deploy"
+    },
+    "devDependencies": {
+        "@types/service-worker-mock": "^2.0.2",
+        "esbuild": "^0.20.2",
+        "typescript": "^5.4.5",
+        "wrangler": "^3.83.0"
+    },
+    "dependencies": {
+        "itty-router": "^4.0.23",
+        "zod": "^3.23.8"
+    }
+}
