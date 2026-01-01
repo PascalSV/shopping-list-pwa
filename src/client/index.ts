@@ -102,7 +102,7 @@ async function main() {
         onAddItem: async (listId, label) => {
             const now = Date.now();
             const trimmedLabel = label.trim();
-            const item: Item = { id: uid(), listId, label: trimmedLabel, done: false, updatedAt: now };
+            const item: Item = { id: uid(), listId, label: trimmedLabel, remark: "", done: false, updatedAt: now };
             await enqueueAndPersist(item);
             ui.updateItems(await getItems());
 
@@ -122,6 +122,12 @@ async function main() {
         onDeleteItem: async (item) => {
             const updated: Item = { ...item, isDeleted: true, updatedAt: Date.now() };
             await enqueueAndPersist(updated, true);
+            ui.updateItems(await getItems());
+            await syncNow(ui.updateItems, ui.updateSuggestions);
+        },
+        onUpdateItem: async (item) => {
+            const updated: Item = { ...item, updatedAt: Date.now() };
+            await enqueueAndPersist(updated);
             ui.updateItems(await getItems());
             await syncNow(ui.updateItems, ui.updateSuggestions);
         },

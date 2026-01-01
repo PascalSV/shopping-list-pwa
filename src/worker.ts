@@ -8,6 +8,7 @@ const itemSchema = z.object({
     id: z.string().min(1),
     listId: z.string().min(1),
     label: z.string().min(1),
+    remark: z.string().optional(),
     done: z.boolean(),
     updatedAt: z.number().int().nonnegative(),
     isDeleted: z.boolean().optional(),
@@ -40,12 +41,17 @@ async function listLists(env: Env): Promise<List[]> {
 async function listItems(env: Env, since = 0): Promise<Item[]> {
     const result = await env.DB
         .prepare(
-            "SELECT id, list_id as listId, label, done, updated_at as updatedAt, is_deleted as isDeleted FROM items WHERE updated_at > ?"
+            "SELECT id, list_id as listId, label, remark, done, updated_at as updatedAt, is_deleted as isDeleted FROM items WHERE updated_at > ?"
         )
         .bind(since)
         .all<Item>();
 
-    return (result.results ?? []).map((row) => ({ ...row, done: Boolean(row.done), isDeleted: Boolean(row.isDeleted) }));
+    return (result.results ?? []).map((row) => ({
+        ...row,
+        remark: row.remark ?? "",
+        done: Boolean(row.done),
+        isDeleted: Boolean(row.isDeleted),
+    }));
 }
 
 async function listSuggestions(env: Env): Promise<Suggestion[]> {
@@ -87,10 +93,18 @@ async function applyMutations(env: Env, body: SyncRequest) {
 
             await env.DB
                 .prepare(
-                    "INSERT INTO items (id, list_id, label, done, updated_at, is_deleted) VALUES (?, ?, ?, ?, ?, ?) " +
-                    "ON CONFLICT(id) DO UPDATE SET list_id=excluded.list_id, label=excluded.label, done=excluded.done, updated_at=excluded.updated_at, is_deleted=excluded.is_deleted"
+                    "INSERT INTO items (id, list_id, label, remark, done, updated_at, is_deleted) VALUES (?, ?, ?, ?, ?, ?, ?) " +
+                    "ON CONFLICT(id) DO UPDATE SET list_id=excluded.list_id, label=excluded.label, remark=excluded.remark, done=excluded.done, updated_at=excluded.updated_at, is_deleted=excluded.is_deleted"
                 )
-                .bind(item.id, item.listId, item.label, item.done ? 1 : 0, item.updatedAt, item.isDeleted ? 1 : 0)
+                .bind(
+                    item.id,
+                    item.listId,
+                    item.label,
+                    item.remark ?? "",
+                    item.done ? 1 : 0,
+                    item.updatedAt,
+                    item.isDeleted ? 1 : 0
+                )
                 .run();
 
             if (isNewItem && !item.isDeleted) {

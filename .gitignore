@@ -44,3 +44,5 @@ dist-ssr/
 
 migrations/
 .github/
+
+.dev.vars.example

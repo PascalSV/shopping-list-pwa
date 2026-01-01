@@ -3,6 +3,7 @@ import { Item, List, Suggestion } from "../types";
 export type UIHandlers = {
     onAddItem(listId: string, label: string): Promise<void>;
     onDeleteItem(item: Item): Promise<void>;
+    onUpdateItem(item: Item): Promise<void>;
 };
 
 export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[], handlers: UIHandlers) {
@@ -18,6 +19,54 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
 
     let currentList = lists[0]?.id ?? "home";
     let localSuggestions = [...suggestions];
+
+    const openRemarkModal = (item: Item) => {
+        const overlay = document.createElement("div");
+        overlay.className = "modal-overlay";
+
+        const modal = document.createElement("div");
+        modal.className = "modal";
+
+        const title = document.createElement("h3");
+        title.textContent = "Notiz zum Artikel";
+
+        const subtitle = document.createElement("p");
+        subtitle.className = "modal-subtitle";
+        subtitle.textContent = item.label;
+
+        const input = document.createElement("textarea");
+        input.className = "modal-textarea";
+        input.value = item.remark ?? "";
+        input.placeholder = "Notiz hinzufügen";
+
+        const actions = document.createElement("div");
+        actions.className = "modal-actions";
+
+        const cancel = document.createElement("button");
+        cancel.type = "button";
+        cancel.className = "button ghost";
+        cancel.textContent = "Abbrechen";
+        cancel.onclick = () => overlay.remove();
+
+        const save = document.createElement("button");
+        save.type = "button";
+        save.className = "button primary";
+        save.textContent = "Speichern";
+        save.onclick = async () => {
+            const remark = input.value.trim();
+            overlay.remove();
+            const updated: Item = { ...item, remark };
+            await handlers.onUpdateItem(updated);
+            item.remark = remark;
+            renderItems();
+        };
+
+        actions.append(cancel, save);
+        modal.append(title, subtitle, input, actions);
+        overlay.append(modal);
+        document.body.appendChild(overlay);
+        input.focus();
+    };
 
     const renderTabs = () => {
         tabs.innerHTML = "";
@@ -51,15 +100,47 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
                 const li = document.createElement("li");
                 li.className = "item";
 
+                const content = document.createElement("div");
+                content.className = item.remark ? "item-content" : "item-content no-remark";
+
                 const label = document.createElement("span");
+                label.className = "item-label";
                 label.textContent = item.label;
+                content.appendChild(label);
+
+                if (item.remark) {
+                    const remark = document.createElement("span");
+                    remark.className = "item-remark";
+                    remark.textContent = item.remark;
+                    content.appendChild(remark);
+                }
 
                 const del = document.createElement("button");
                 del.textContent = "✕";
                 del.className = "delete";
-                del.onclick = async () => handlers.onDeleteItem(item);
+                del.onclick = async (event) => {
+                    event.stopPropagation();
+                    await handlers.onDeleteItem(item);
+                };
 
-                li.append(label, del);
+                let pressTimer: number | null = null;
+                const startPress = () => {
+                    if (pressTimer) window.clearTimeout(pressTimer);
+                    pressTimer = window.setTimeout(() => {
+                        openRemarkModal(item);
+                    }, 500);
+                };
+
+                const cancelPress = () => {
+                    if (pressTimer) window.clearTimeout(pressTimer);
+                    pressTimer = null;
+                };
+
+                li.addEventListener("pointerdown", startPress);
+                li.addEventListener("pointerup", cancelPress);
+                li.addEventListener("pointerleave", cancelPress);
+
+                li.append(content, del);
                 itemsContainer.appendChild(li);
             });
     };

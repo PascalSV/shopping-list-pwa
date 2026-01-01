@@ -73,7 +73,7 @@ header {
     gap: 12px;
     padding: 16px 24px;
     background: var(--bg);
-    position: sticky;
+    align-items: flex-start;
     top: 0;
     z-index: 100;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -99,6 +99,108 @@ h2 {
 .hint {
     color: var(--muted);
     margin: 0;
+}
+
+.item-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.item-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.item-remark {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 999;
+}
+
+.modal {
+    background: var(--card);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 20px;
+    width: min(480px, 100%);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.modal-subtitle {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.modal-textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    resize: vertical;
+    font-family: inherit;
+}
+
+.modal-textarea:focus {
+    outline: none;
+    border-color: rgba(22, 163, 74, 0.6);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.button {
+    border: none;
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 15px;
+    transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.button:hover {
+    opacity: 0.9;
+}
+
+.button:active {
+    transform: translateY(1px);
+}
+
+.button.ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.button.primary {
+    background: linear-gradient(135deg, var(--accent), #22c55e);
+    color: #0c1c14;
 }
 
 .card {
@@ -253,17 +355,37 @@ h2 {
 .item {
     display: grid;
     grid-template-columns: 1fr auto;
-    align-items: center;
+    align-items: stretch;
+    min-height: 72px;
     gap: 12px;
     padding: 10px 12px;
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.04);
 }
 
-.item span {
+.item-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    justify-content: flex-start;
+}
+
+.item-content.no-remark {
+    justify-content: center;
+}
+
+.item-label {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.item-remark {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.4;
+    word-break: break-word;
 }
 
 .item .delete {
@@ -272,6 +394,7 @@ h2 {
     color: var(--muted);
     cursor: pointer;
     font-size: 16px;
+    align-self: center;
 }
 
 @media (max-width: 640px) {
