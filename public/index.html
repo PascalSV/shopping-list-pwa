@@ -27,14 +27,12 @@
         </section>
 
         <section class="input-section">
+            <div id="add-message" class="add-message" aria-live="polite"></div>
             <div id="suggestions" class="suggestions"></div>
-            <form id="add-form" class="add-row">
-                <div class="input-wrapper">
-                    <input id="item-input" type="text" name="label" placeholder="Ich brauche..." autocomplete="off" />
-                    <button id="clear-input" type="button" class="clear-btn" style="display: none;">×</button>
-                </div>
-                <button type="submit">Hinzufügen</button>
-            </form>
+            <div class="search-input-wrapper">
+                <input id="item-input" type="text" placeholder="Ich brauche..." autocomplete="off">
+                <button id="cancel-input" class="cancel-btn">Abbrechen</button>
+            </div>
         </section>
     </main>
     <script type="module" src="/assets/index.js"></script>

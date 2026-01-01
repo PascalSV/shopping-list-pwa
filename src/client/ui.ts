@@ -9,13 +9,13 @@ export type UIHandlers = {
 export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[], handlers: UIHandlers) {
     const tabs = document.querySelector<HTMLDivElement>('#list-tabs');
     const listTitle = document.querySelector<HTMLHeadingElement>('#list-title');
-    const form = document.querySelector<HTMLFormElement>('#add-form');
     const input = document.querySelector<HTMLInputElement>('#item-input');
-    const clearBtn = document.querySelector<HTMLButtonElement>('#clear-input');
+    const cancelBtn = document.querySelector<HTMLButtonElement>('#cancel-input');
+    const addMessage = document.querySelector<HTMLDivElement>('#add-message');
     const itemsContainer = document.querySelector<HTMLUListElement>('#items');
     const suggestionsContainer = document.querySelector<HTMLDivElement>('#suggestions');
 
-    if (!tabs || !form || !input || !clearBtn || !itemsContainer || !listTitle || !suggestionsContainer) return;
+    if (!tabs || !input || !cancelBtn || !itemsContainer || !listTitle || !suggestionsContainer) return;
 
     let currentList = lists[0]?.id ?? "home";
     let localSuggestions = [...suggestions];
@@ -175,26 +175,29 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
         }
     };
 
-    form.onsubmit = async (event) => {
-        event.preventDefault();
-        const label = input.value.trim();
-        if (!label) return;
-        await handlers.onAddItem(currentList, label);
-        input.value = "";
-        clearBtn.style.display = "none";
-        suggestionsContainer.innerHTML = "";
-        renderItems();
+    input.onkeydown = async (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            const label = input.value.trim();
+            if (!label) return;
+            await handlers.onAddItem(currentList, label);
+            input.value = "";
+            suggestionsContainer.innerHTML = "";
+            renderItems();
+        }
     };
 
     input.oninput = () => {
         renderSuggestions(input.value);
-        clearBtn.style.display = input.value ? "block" : "none";
     };
 
-    clearBtn.onclick = () => {
+    cancelBtn.onclick = () => {
         input.value = "";
-        clearBtn.style.display = "none";
         suggestionsContainer.innerHTML = "";
+        if (addMessage) {
+            addMessage.textContent = "";
+            addMessage.classList.remove("visible");
+        }
         input.focus();
     };
 

@@ -89,6 +89,16 @@ async function main() {
     // Update greeting with logged-in user name
     const authUser = localStorage.getItem('auth-user') || 'Pascal';
     const greetingEl = document.querySelector<HTMLHeadingElement>('#greeting');
+    const addMessage = document.querySelector<HTMLDivElement>('#add-message');
+    let addMessageTimeout: number | undefined;
+
+    const showAddMessage = (text: string) => {
+        if (!addMessage) return;
+        addMessage.textContent = text;
+        addMessage.classList.add('visible');
+        if (addMessageTimeout) window.clearTimeout(addMessageTimeout);
+        addMessageTimeout = window.setTimeout(() => addMessage.classList.remove('visible'), 2000);
+    };
     if (greetingEl) {
         greetingEl.textContent = `Hi, ${authUser}`;
     }
@@ -102,15 +112,24 @@ async function main() {
         onAddItem: async (listId, label) => {
             const now = Date.now();
             const trimmedLabel = label.trim();
+            const existingItems = await getItems();
+            const alreadyThere = existingItems.some(
+                (i) => i.listId === listId && !i.isDeleted && i.label.trim().toLowerCase() === trimmedLabel.toLowerCase()
+            );
+            if (alreadyThere) {
+                showAddMessage('Der Artikel ist bereits auf der Liste');
+                return;
+            }
+
             const item: Item = { id: uid(), listId, label: trimmedLabel, remark: "", done: false, updatedAt: now };
             await enqueueAndPersist(item);
             ui.updateItems(await getItems());
 
             const normalizedLabel = trimmedLabel.toLowerCase();
-            const existing = suggestionState.find((s) => s.label === normalizedLabel);
-            if (existing) {
-                existing.count += 1;
-                existing.displayLabel = trimmedLabel;
+            const existingSuggestion = suggestionState.find((s) => s.label === normalizedLabel);
+            if (existingSuggestion) {
+                existingSuggestion.count += 1;
+                existingSuggestion.displayLabel = trimmedLabel;
             } else {
                 suggestionState.push({ label: normalizedLabel, displayLabel: trimmedLabel, count: 1 });
             }
