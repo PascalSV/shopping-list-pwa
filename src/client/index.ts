@@ -1,5 +1,5 @@
 import { fetchBootstrap, postSync } from "./api";
-import { isAuthenticated, showLoginScreen } from "./login";
+import { isAuthenticated, showLoginScreen, logout } from "./login";
 import {
     addPending,
     clearPending,
@@ -78,6 +78,11 @@ async function syncNow(updateItems: (items: Item[]) => void, updateSuggestions: 
         updateItems(localItems);
         updateSuggestions(localSuggestions);
     } catch (err) {
+        const status = (err as { status?: number }).status;
+        if (status === 401) {
+            logout();
+            return;
+        }
         console.warn("Sync failed, will retry later", err);
     }
 }
