@@ -1,7 +1,7 @@
 import { Item, List, SyncMutation } from "../types";
 
 const DB_NAME = "shopping-list";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE_LISTS = "lists";
 const STORE_ITEMS = "items";
 const STORE_PENDING = "pending";

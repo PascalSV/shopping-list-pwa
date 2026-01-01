@@ -1,6 +1,8 @@
 export type List = {
     id: string;
     name: string;
+    updatedAt?: number;
+    isDeleted?: boolean;
 };
 
 export type Item = {
@@ -19,7 +21,9 @@ export type Suggestion = {
 
 export type SyncMutation =
     | { type: "upsert-item"; item: Item }
-    | { type: "delete-item"; id: string; updatedAt: number };
+    | { type: "delete-item"; id: string; updatedAt: number }
+    | { type: "upsert-list"; list: List }
+    | { type: "delete-list"; id: string; updatedAt: number };
 
 export type SyncRequest = {
     since?: number;

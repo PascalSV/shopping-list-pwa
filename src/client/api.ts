@@ -11,7 +11,10 @@ export async function fetchBootstrap(): Promise<SyncResponse> {
 export async function postSync(body: SyncRequest): Promise<SyncResponse> {
     const res = await fetch(`${API_BASE}/sync`, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+            "content-type": "application/json",
+            "x-sync-secret": "furz"
+        },
         body: JSON.stringify(body),
     });
     if (!res.ok) throw new Error(`Sync failed: ${res.status}`);

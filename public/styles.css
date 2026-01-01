@@ -152,6 +152,23 @@ h2 {
     font-size: 14px;
 }
 
+.modal-input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 16px;
+}
+
+.modal-input:focus {
+    outline: none;
+    border-color: rgba(22, 163, 74, 0.6);
+    background: rgba(255, 255, 255, 0.08);
+}
+
 .modal-textarea {
     width: 100%;
     min-height: 100px;
@@ -205,6 +222,18 @@ h2 {
     color: #0c1c14;
 }
 
+.button.delete-btn {
+    background: rgba(220, 38, 38, 0.2);
+    color: #fca5a5;
+    border: 1px solid rgba(220, 38, 38, 0.3);
+    margin-right: auto;
+}
+
+.button.delete-btn:hover {
+    background: rgba(220, 38, 38, 0.3);
+    border-color: rgba(220, 38, 38, 0.5);
+}
+
 .card {
     flex: 1;
     overflow-y: auto;
@@ -231,6 +260,17 @@ h2 {
 .tab.active {
     background: rgba(22, 163, 74, 0.2);
     border-color: rgba(22, 163, 74, 0.6);
+}
+
+.add-list-btn {
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.add-list-btn svg {
+    display: block;
 }
 
 .add-row {

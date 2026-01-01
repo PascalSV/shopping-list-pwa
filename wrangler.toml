@@ -9,7 +9,7 @@ pattern = "shopping-list.everyday-apps.org"
 custom_domain = true
 
 [vars]
-SYNC_SECRET = "shopping-list-pwa-token-pascal"
+SYNC_SECRET = "furz"
 
 [[d1_databases]]
 binding = "DB"

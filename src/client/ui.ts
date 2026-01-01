@@ -4,6 +4,9 @@ export type UIHandlers = {
     onAddItem(listId: string, label: string): Promise<void>;
     onDeleteItem(item: Item): Promise<void>;
     onUpdateItem(item: Item): Promise<void>;
+    onAddList(name: string): Promise<void>;
+    onUpdateList(list: List): Promise<void>;
+    onDeleteList(listId: string): Promise<void>;
 };
 
 export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[], handlers: UIHandlers) {
@@ -19,6 +22,101 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
 
     let currentList = lists[0]?.id ?? "home";
     let localSuggestions = [...suggestions];
+
+    const openAddListModal = () => {
+        const overlay = document.createElement("div");
+        overlay.className = "modal-overlay";
+
+        const modal = document.createElement("div");
+        modal.className = "modal";
+
+        const title = document.createElement("h3");
+        title.textContent = "Neue Liste erstellen";
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "modal-input";
+        input.placeholder = "Listenname";
+
+        const actions = document.createElement("div");
+        actions.className = "modal-actions";
+
+        const cancel = document.createElement("button");
+        cancel.type = "button";
+        cancel.className = "button ghost";
+        cancel.textContent = "Abbrechen";
+        cancel.onclick = () => overlay.remove();
+
+        const save = document.createElement("button");
+        save.type = "button";
+        save.className = "button primary";
+        save.textContent = "Erstellen";
+        save.onclick = async () => {
+            const name = input.value.trim();
+            if (!name) return;
+            overlay.remove();
+            await handlers.onAddList(name);
+        };
+
+        actions.append(cancel, save);
+        modal.append(title, input, actions);
+        overlay.append(modal);
+        document.body.appendChild(overlay);
+        input.focus();
+    };
+
+    const openEditListModal = (list: List) => {
+        const overlay = document.createElement("div");
+        overlay.className = "modal-overlay";
+
+        const modal = document.createElement("div");
+        modal.className = "modal";
+
+        const title = document.createElement("h3");
+        title.textContent = "Liste bearbeiten";
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "modal-input";
+        input.value = list.name;
+
+        const actions = document.createElement("div");
+        actions.className = "modal-actions";
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
+        deleteBtn.className = "button delete-btn";
+        deleteBtn.textContent = "Löschen";
+        deleteBtn.onclick = async () => {
+            if (confirm(`Liste "${list.name}" wirklich löschen?`)) {
+                overlay.remove();
+                await handlers.onDeleteList(list.id);
+            }
+        };
+
+        const cancel = document.createElement("button");
+        cancel.type = "button";
+        cancel.className = "button ghost";
+        cancel.textContent = "Abbrechen";
+        cancel.onclick = () => overlay.remove();
+
+        const save = document.createElement("button");
+        save.type = "button";
+        save.className = "button primary";
+        save.textContent = "Speichern";
+        save.onclick = async () => {
+            const name = input.value.trim();
+            if (!name) return;
+            overlay.remove();
+            await handlers.onUpdateList({ ...list, name });
+        };
+
+        actions.append(deleteBtn, cancel, save);
+        modal.append(title, input, actions);
+        overlay.append(modal);
+        document.body.appendChild(overlay);
+        input.focus();
+    };
 
     const openRemarkModal = (item: Item) => {
         const overlay = document.createElement("div");
@@ -70,6 +168,14 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
 
     const renderTabs = () => {
         tabs.innerHTML = "";
+
+        // Add plus button
+        const plusBtn = document.createElement("button");
+        plusBtn.className = "tab add-list-btn";
+        plusBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+        plusBtn.onclick = () => openAddListModal();
+        tabs.appendChild(plusBtn);
+
         lists.forEach((list) => {
             const btn = document.createElement("button");
             btn.textContent = list.name;
@@ -81,6 +187,24 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
                 renderItems();
                 input.focus();
             };
+
+            // Long press handler
+            let pressTimer: number | null = null;
+            const startPress = () => {
+                if (pressTimer) window.clearTimeout(pressTimer);
+                pressTimer = window.setTimeout(() => {
+                    openEditListModal(list);
+                }, 500);
+            };
+            const cancelPress = () => {
+                if (pressTimer) window.clearTimeout(pressTimer);
+                pressTimer = null;
+            };
+
+            btn.addEventListener("pointerdown", startPress);
+            btn.addEventListener("pointerup", cancelPress);
+            btn.addEventListener("pointerleave", cancelPress);
+
             tabs.appendChild(btn);
         });
     };

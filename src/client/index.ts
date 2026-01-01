@@ -38,7 +38,8 @@ function uid() {
 
 async function hydrateFromLocal() {
     const [lists, items, suggestions] = await Promise.all([getLists(), getItems(), getSuggestions()]);
-    return { lists: lists.length ? lists : fallbackLists, items, suggestions };
+    const activeLists = lists.filter(l => !l.isDeleted);
+    return { lists: activeLists.length ? activeLists : fallbackLists, items, suggestions };
 }
 
 async function bootstrapFromRemote() {
@@ -149,6 +150,33 @@ async function main() {
             await enqueueAndPersist(updated);
             ui.updateItems(await getItems());
             await syncNow(ui.updateItems, ui.updateSuggestions);
+        },
+        onAddList: async (name: string) => {
+            const now = Date.now();
+            const newList: List = { id: uid(), name, updatedAt: now, isDeleted: false };
+            const mutation: SyncMutation = { type: "upsert-list", list: newList };
+            await saveLists([...(await getLists()), newList]);
+            await addPending(mutation);
+            location.reload(); // Reload to reinitialize UI with new list
+        },
+        onUpdateList: async (list: List) => {
+            const now = Date.now();
+            const updated: List = { ...list, updatedAt: now };
+            const mutation: SyncMutation = { type: "upsert-list", list: updated };
+            const allLists = await getLists();
+            const updatedLists = allLists.map(l => l.id === list.id ? updated : l);
+            await saveLists(updatedLists);
+            await addPending(mutation);
+            location.reload(); // Reload to show updated list name
+        },
+        onDeleteList: async (listId: string) => {
+            const now = Date.now();
+            const mutation: SyncMutation = { type: "delete-list", id: listId, updatedAt: now };
+            const allLists = await getLists();
+            const updatedLists = allLists.map(l => l.id === listId ? { ...l, isDeleted: true, updatedAt: now } : l);
+            await saveLists(updatedLists);
+            await addPending(mutation);
+            location.reload(); // Reload to remove deleted list from UI
         },
     });
 

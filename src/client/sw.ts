@@ -1,4 +1,4 @@
-const CACHE_NAME = "shopping-list-cache-v1";
+const CACHE_NAME = "shopping-list-cache-v2";
 const ASSETS = ["/", "/index.html", "/manifest.webmanifest", "/styles.css", "/assets/index.js"];
 
 self.addEventListener("install", (event) => {
