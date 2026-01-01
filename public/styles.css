@@ -1,4 +1,37 @@
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@500;700&display=swap");
+@font-face {
+    font-family: "D-DIN";
+    src: url("/fonts/D-DIN.otf") format("opentype");
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "D-DIN";
+    src: url("/fonts/D-DIN-Bold.otf") format("opentype");
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "D-DIN";
+    src: url("/fonts/D-DIN-Italic.otf") format("opentype");
+    font-weight: 400;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: "D-DINCondensed";
+    src: url("/fonts/D-DINCondensed.otf") format("opentype");
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "D-DINCondensed";
+    src: url("/fonts/D-DINCondensed-Bold.otf") format("opentype");
+    font-weight: 700;
+    font-style: normal;
+}
 
 :root {
     color-scheme: light dark;
@@ -15,7 +48,7 @@
 
 body {
     margin: 0;
-    font-family: "Manrope", system-ui, -apple-system, sans-serif;
+    font-family: "D-DIN", system-ui, -apple-system, sans-serif;
     background: radial-gradient(circle at 20% 20%, rgba(22, 163, 74, 0.15), transparent 25%), var(--bg);
     color: var(--text);
     min-height: 100vh;
@@ -159,6 +192,39 @@ h2 {
     gap: 8px;
 }
 
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px;
+    gap: 16px;
+}
+
+.empty-icon {
+    font-size: 80px;
+    animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+.empty-text {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent);
+    text-align: center;
+}
+
 .input-section {
     position: sticky;
     bottom: 0;
@@ -224,4 +290,145 @@ h2 {
     .add-row {
         grid-template-columns: 1fr;
     }
+
+    .login-card {
+        padding: 30px 20px;
+        border-radius: 16px;
+    }
+
+    .login-card h1 {
+        font-size: 24px;
+    }
+}
+
+#login-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(15, 118, 110, 0.95), rgba(22, 163, 74, 0.95));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.login-container {
+    padding: 20px;
+}
+
+.login-card {
+    background: var(--card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 400px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    text-align: center;
+}
+
+.login-card h1 {
+    margin: 0 0 8px 0;
+    font-size: 32px;
+    color: var(--text);
+}
+
+.login-subtitle {
+    color: var(--muted);
+    margin: 0 0 30px 0;
+    font-size: 14px;
+}
+
+#login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    font-size: 16px;
+    font-family: inherit;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: rgba(22, 163, 74, 0.6);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.form-group input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.login-message {
+    padding: 12px;
+    border-radius: 8px;
+    background: rgba(220, 38, 38, 0.1);
+    color: #fca5a5;
+    font-size: 14px;
+}
+
+.login-button {
+    background: linear-gradient(135deg, var(--accent), #22c55e);
+    color: #0c1c14;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 16px;
+    transition: opacity 120ms ease;
+}
+
+.login-button:hover:not(:disabled) {
+    opacity: 0.9;
+}
+
+.login-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.user-toggle-button {
+    background: rgba(22, 163, 74, 0.15);
+    color: var(--accent);
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 200ms ease;
+    width: 100%;
+    font-family: inherit;
+}
+
+.user-toggle-button:hover {
+    background: rgba(22, 163, 74, 0.25);
+    transform: scale(1.02);
+}
+
+.user-toggle-button:active {
+    transform: scale(0.98);
 }

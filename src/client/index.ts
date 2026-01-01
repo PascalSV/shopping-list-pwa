@@ -1,4 +1,5 @@
 import { fetchBootstrap, postSync } from "./api";
+import { isAuthenticated, showLoginScreen } from "./login";
 import {
     addPending,
     clearPending,
@@ -81,6 +82,17 @@ async function syncNow(updateItems: (items: Item[]) => void, updateSuggestions: 
 }
 
 async function main() {
+    if (!isAuthenticated()) {
+        await showLoginScreen();
+    }
+
+    // Update greeting with logged-in user name
+    const authUser = localStorage.getItem('auth-user') || 'Pascal';
+    const greetingEl = document.querySelector<HTMLHeadingElement>('#greeting');
+    if (greetingEl) {
+        greetingEl.textContent = `Hi, ${authUser}`;
+    }
+
     await registerServiceWorker();
 
     const local = await hydrateFromLocal();

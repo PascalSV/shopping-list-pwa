@@ -5,7 +5,7 @@ compatibility_flags = ["nodejs_compat"]
 assets = { directory = "./public" }
 
 [vars]
-SYNC_SECRET = "set-me-in-dashboard"
+SYNC_SECRET = "shopping-list-pwa-token-pascal"
 
 [[d1_databases]]
 binding = "DB"

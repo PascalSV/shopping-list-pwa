@@ -150,6 +150,25 @@ router.post("/api/sync", async (request: Request, env: Env) => {
     return json(payload);
 });
 
+router.post("/api/login", async (request: Request, env: Env) => {
+    try {
+        const data = await request.json() as { user: 'Pascal' | 'Claudia'; password: string };
+
+        const secretKey = data.user === 'Claudia'
+            ? 'shopping-list-pwa-token-claudia'
+            : 'shopping-list-pwa-token-pascal';
+
+        const token = env[secretKey];
+        if (!token) return json({ error: "No token configured" }, 500);
+        if (data.password === token) {
+            return json({ success: true, token: "authenticated" });
+        }
+        return json({ error: "Invalid password" }, 401);
+    } catch (err) {
+        return json({ error: "Invalid request" }, 400);
+    }
+});
+
 router.all("*", () => new Response("Not Found", { status: 404 }));
 
 export default {

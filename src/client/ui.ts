@@ -39,6 +39,12 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
     const renderItems = () => {
         itemsContainer.innerHTML = "";
         const byList = items.filter((item) => item.listId === currentList && !item.isDeleted);
+
+        if (byList.length === 0) {
+            itemsContainer.innerHTML = '<div class="empty-state"><div class="empty-icon">👍</div><div class="empty-text">Alles erledigt</div></div>';
+            return;
+        }
+
         byList
             .sort((a, b) => a.label.localeCompare(b.label))
             .forEach((item) => {
@@ -76,7 +82,7 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
             const button = document.createElement("button");
             button.type = "button";
             button.className = "suggestion";
-            button.textContent = `${suggestion.displayLabel})`;
+            button.textContent = `${suggestion.displayLabel}`;
             button.onclick = async () => {
                 await handlers.onAddItem(currentList, suggestion.displayLabel);
                 input.value = "";
@@ -113,6 +119,7 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
 
     renderTabs();
     renderItems();
+    listTitle.textContent = lists[0]?.name ?? "Home";
 
     return {
         updateItems(newItems: Item[]) {
