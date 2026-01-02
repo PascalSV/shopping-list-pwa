@@ -20,7 +20,10 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
 
     if (!tabs || !input || !cancelBtn || !itemsContainer || !listTitle || !suggestionsContainer) return;
 
-    let currentList = lists[0]?.id ?? "home";
+    // Restore last viewed list from localStorage, or default to first list
+    const lastListId = localStorage.getItem('last-viewed-list');
+    const listExists = lists.some(l => l.id === lastListId);
+    let currentList = (lastListId && listExists) ? lastListId : (lists[0]?.id ?? "home");
     let localSuggestions = [...suggestions];
 
     const openAddListModal = () => {
@@ -241,6 +244,7 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
             btn.className = list.id === currentList ? "tab active" : "tab";
             btn.onclick = () => {
                 currentList = list.id;
+                localStorage.setItem('last-viewed-list', list.id);
                 listTitle.textContent = list.name;
                 renderTabs();
                 renderItems();
