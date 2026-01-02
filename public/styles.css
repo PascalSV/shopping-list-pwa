@@ -40,6 +40,24 @@
     --muted: #94a3b8;
     --accent: #16a34a;
     --text: #e2e8f0;
+    --border: rgba(255, 255, 255, 0.1);
+    --border-light: rgba(255, 255, 255, 0.05);
+    --overlay-light: rgba(255, 255, 255, 0.04);
+    --overlay-medium: rgba(255, 255, 255, 0.08);
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        --bg: #f8fafc;
+        --card: #f1f5f9;
+        --muted: #64748b;
+        --accent: #16a34a;
+        --text: #0f172a;
+        --border: rgba(15, 23, 42, 0.1);
+        --border-light: rgba(15, 23, 42, 0.05);
+        --overlay-light: rgba(15, 23, 42, 0.04);
+        --overlay-medium: rgba(15, 23, 42, 0.08);
+    }
 }
 
 * {
@@ -82,7 +100,7 @@ header {
     align-items: flex-start;
     top: 0;
     z-index: 100;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--border-light);
 }
 
 h1 {
@@ -142,7 +160,7 @@ h2 {
 
 .modal {
     background: var(--card);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border);
     border-radius: 16px;
     padding: 20px;
     width: min(480px, 100%);
@@ -258,7 +276,7 @@ h2 {
 }
 
 .tab {
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--border);
     background: transparent;
     color: var(--text);
     padding: 8px 12px;

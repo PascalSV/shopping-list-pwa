@@ -39,7 +39,22 @@ Offline-friendly shopping list PWA backed by a Cloudflare Worker and D1. Ships w
   ```bash
   npx wrangler d1 migrations apply shopping-list-pwa --remote
   ```
-- Set `SYNC_SECRET` via `wrangler secret put SYNC_SECRET` (or the dashboard) and share it with clients if you want to enforce it.
+
+### Secrets
+Set the following Cloudflare secrets via `wrangler secret put` or the dashboard:
+- `shopping-list-pwa-token-pascal` - Password/token for Pascal user
+- `shopping-list-pwa-token-claudia` - Password/token for Claudia user
+
+Example:
+```bash
+wrangler secret put shopping-list-pwa-token-pascal
+# Enter the secret when prompted
+
+wrangler secret put shopping-list-pwa-token-claudia
+# Enter the secret when prompted
+```
+
+These secrets are used for user authentication on the `/api/login` endpoint and for sync authentication via the `x-sync-secret` header.
 
 ## API
 - `GET /api/bootstrap` → lists + items + suggestions snapshot.
