@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1284 2778" role="img" aria-label="Splash Screen">
+  <defs>
+    <linearGradient id="grad" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#0b3941" offset="0" />
+      <stop stop-color="#0f2e38" offset="1" />
+    </linearGradient>
+    <linearGradient id="icon-grad" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#0f766e" offset="0" />
+      <stop stop-color="#16a34a" offset="1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1284" height="2778" fill="url(#grad)" />
+  
+  <!-- Radial gradient overlay -->
+  <circle cx="642" cy="400" r="800" fill="rgba(22, 163, 74, 0.1)" />
+  
+  <!-- Icon circle centered on screen -->
+  <g transform="translate(642, 1200)">
+    <!-- Icon background -->
+    <rect width="300" height="300" x="-150" y="-150" rx="60" fill="url(#icon-grad)" />
+    
+    <!-- Icon content -->
+    <g stroke="#0b1f1a" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <!-- List box -->
+      <path d="M-75,-75h180v220H-75z" fill="rgba(255,255,255,0.08)" />
+      
+      <!-- List items -->
+      <path d="M-60,-50h120M-60,0h120M-60,50h80" />
+      
+      <!-- Header -->
+      <path d="M-75,-95h180v40H-75z" fill="#f8fafc" />
+    </g>
+  </g>
+  
+  <!-- App title -->
+  <text x="642" y="1700" font-family="'D-DIN', system-ui, -apple-system, sans-serif" font-size="72" font-weight="700" fill="#e2e8f0" text-anchor="middle">
+    Einkaufsliste
+  </text>
+  
+  <!-- Subtitle -->
+  <text x="642" y="1800" font-family="'D-DIN', system-ui, -apple-system, sans-serif" font-size="48" fill="rgba(226, 232, 240, 0.7)" text-anchor="middle">
+    Offline Ready
+  </text>
+</svg>

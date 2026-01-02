@@ -55,6 +55,9 @@ body {
     display: flex;
     flex-direction: column;
     padding: 0;
+    padding-top: max(0px, env(safe-area-inset-top));
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
 }
 
 .app {
@@ -72,6 +75,9 @@ header {
     justify-content: space-between;
     gap: 12px;
     padding: 16px 24px;
+    padding-top: max(16px, calc(16px + env(safe-area-inset-top)));
+    padding-left: max(24px, calc(24px + env(safe-area-inset-left)));
+    padding-right: max(24px, calc(24px + env(safe-area-inset-right)));
     background: var(--bg);
     align-items: flex-start;
     top: 0;
@@ -417,6 +423,9 @@ h2 {
     bottom: 0;
     background: var(--bg);
     padding: 12px 24px 24px;
+    padding-left: max(24px, calc(24px + env(safe-area-inset-left)));
+    padding-right: max(24px, calc(24px + env(safe-area-inset-right)));
+    padding-bottom: max(24px, calc(24px + env(safe-area-inset-bottom)));
     border-top: 1px solid rgba(255, 255, 255, 0.05);
     z-index: 100;
 }
