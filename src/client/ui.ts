@@ -281,21 +281,52 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
                 };
 
                 let pressTimer: number | null = null;
-                const startPress = () => {
+                let touchStartX = 0;
+                let touchStartY = 0;
+
+                const startPress = (e: TouchEvent | PointerEvent) => {
+                    if (e instanceof TouchEvent) {
+                        touchStartX = e.touches[0].clientX;
+                        touchStartY = e.touches[0].clientY;
+                    } else {
+                        touchStartX = e.clientX;
+                        touchStartY = e.clientY;
+                    }
                     if (pressTimer) window.clearTimeout(pressTimer);
                     pressTimer = window.setTimeout(() => {
                         openRemarkModal(item);
-                    }, 500);
+                    }, 800); // Longer timeout for long press
                 };
 
-                const cancelPress = () => {
+                const cancelPress = (e: TouchEvent | PointerEvent) => {
                     if (pressTimer) window.clearTimeout(pressTimer);
                     pressTimer = null;
                 };
 
-                li.addEventListener("pointerdown", startPress);
-                li.addEventListener("pointerup", cancelPress);
-                li.addEventListener("pointerleave", cancelPress);
+                const onMove = (e: TouchEvent | PointerEvent) => {
+                    // Cancel long press if user is scrolling (movement > 10px)
+                    let currentX = 0;
+                    let currentY = 0;
+                    if (e instanceof TouchEvent) {
+                        currentX = e.touches[0].clientX;
+                        currentY = e.touches[0].clientY;
+                    } else {
+                        currentX = e.clientX;
+                        currentY = e.clientY;
+                    }
+                    const dx = Math.abs(currentX - touchStartX);
+                    const dy = Math.abs(currentY - touchStartY);
+                    if (dx > 10 || dy > 10) {
+                        cancelPress(e);
+                    }
+                };
+
+                li.addEventListener("touchstart", startPress as any);
+                li.addEventListener("touchend", cancelPress as any);
+                li.addEventListener("touchmove", onMove as any);
+                li.addEventListener("pointerdown", startPress as any);
+                li.addEventListener("pointerup", cancelPress as any);
+                li.addEventListener("pointermove", onMove as any);
 
                 li.append(content, del);
                 itemsContainer.appendChild(li);
