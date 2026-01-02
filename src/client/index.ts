@@ -103,24 +103,6 @@ async function main() {
         await showLoginScreen();
     }
 
-    // Setup theme toggle
-    const hintEl = document.querySelector<HTMLParagraphElement>('.hint');
-    const savedTheme = localStorage.getItem('theme-preference');
-    if (savedTheme) {
-        document.documentElement.setAttribute('data-theme', savedTheme);
-    }
-
-    if (hintEl) {
-        hintEl.style.cursor = 'pointer';
-        hintEl.title = 'Click to toggle theme';
-        hintEl.onclick = () => {
-            const current = document.documentElement.getAttribute('data-theme') || 'auto';
-            const next = current === 'light' ? 'dark' : 'light';
-            document.documentElement.setAttribute('data-theme', next);
-            localStorage.setItem('theme-preference', next);
-        };
-    }
-
     // Update greeting with logged-in user name
     const authUser = localStorage.getItem('auth-user') || 'Pascal';
     const greetingEl = document.querySelector<HTMLHeadingElement>('#greeting');

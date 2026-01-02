@@ -46,9 +46,9 @@
     --overlay-medium: rgba(255, 255, 255, 0.08);
 }
 
-/* Fallback to system preference when no manual theme is set */
+/* System preference light theme */
 @media (prefers-color-scheme: light) {
-    :root:not([data-theme]) {
+    :root {
         --bg: #f8fafc;
         --card: #f1f5f9;
         --muted: #64748b;
@@ -59,31 +59,6 @@
         --overlay-light: rgba(15, 23, 42, 0.06);
         --overlay-medium: rgba(15, 23, 42, 0.12);
     }
-}
-
-/* Manual theme overrides */
-:root[data-theme="light"] {
-    --bg: #f8fafc;
-    --card: #f1f5f9;
-    --muted: #64748b;
-    --accent: #16a34a;
-    --text: #0f172a;
-    --border: rgba(15, 23, 42, 0.2);
-    --border-light: rgba(15, 23, 42, 0.12);
-    --overlay-light: rgba(15, 23, 42, 0.06);
-    --overlay-medium: rgba(15, 23, 42, 0.12);
-}
-
-:root[data-theme="dark"] {
-    --bg: #0b3941;
-    --card: #0f282f;
-    --muted: #94a3b8;
-    --accent: #16a34a;
-    --text: #e2e8f0;
-    --border: rgba(255, 255, 255, 0.1);
-    --border-light: rgba(255, 255, 255, 0.05);
-    --overlay-light: rgba(255, 255, 255, 0.04);
-    --overlay-medium: rgba(255, 255, 255, 0.08);
 }
 
 * {
@@ -321,14 +296,6 @@ h2 {
     h2 {
         background: rgba(248, 250, 252, 0.85);
     }
-}
-
-:root[data-theme="light"] h2 {
-    background: rgba(248, 250, 252, 0.85);
-}
-
-:root[data-theme="dark"] h2 {
-    background: rgba(11, 57, 65, 0.85);
 }
 
 .tab {
@@ -579,6 +546,7 @@ h2 {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    padding: 6px 0;
 }
 
 .item-remark {
@@ -586,6 +554,7 @@ h2 {
     color: var(--muted);
     line-height: 1.4;
     word-break: break-word;
+    padding: 0;
 }
 
 .item .delete {
