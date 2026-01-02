@@ -25,6 +25,7 @@ const mutationSchema = z.discriminatedUnion("type", [
             name: z.string().min(1),
             updatedAt: z.number().int().nonnegative().optional(),
             isDeleted: z.boolean().optional(),
+            isFavorite: z.boolean().optional(),
         })
     }),
     z.object({ type: z.literal("delete-list"), id: z.string().min(1), updatedAt: z.number().int().nonnegative() }),
@@ -45,8 +46,8 @@ const json = (data: unknown, status = 200) =>
     });
 
 async function listLists(env: Env): Promise<List[]> {
-    const result = await env.DB.prepare("SELECT id, name, updated_at as updatedAt, is_deleted as isDeleted FROM lists ORDER BY name ASC").all<List>();
-    return (result.results ?? []).map((row) => ({ ...row, updatedAt: row.updatedAt || 0, isDeleted: Boolean(row.isDeleted) }));
+    const result = await env.DB.prepare("SELECT id, name, updated_at as updatedAt, is_deleted as isDeleted, is_favorite as isFavorite FROM lists ORDER BY is_favorite DESC, name ASC").all<List>();
+    return (result.results ?? []).map((row) => ({ ...row, updatedAt: row.updatedAt || 0, isDeleted: Boolean(row.isDeleted), isFavorite: Boolean(row.isFavorite) }));
 }
 
 async function listItems(env: Env, since = 0): Promise<Item[]> {
@@ -104,10 +105,10 @@ async function applyMutations(env: Env, body: SyncRequest) {
 
             await env.DB
                 .prepare(
-                    "INSERT INTO lists (id, name, updated_at, is_deleted) VALUES (?, ?, ?, ?) " +
-                    "ON CONFLICT(id) DO UPDATE SET name=excluded.name, updated_at=excluded.updated_at, is_deleted=excluded.is_deleted"
+                    "INSERT INTO lists (id, name, updated_at, is_deleted, is_favorite) VALUES (?, ?, ?, ?, ?) " +
+                    "ON CONFLICT(id) DO UPDATE SET name=excluded.name, updated_at=excluded.updated_at, is_deleted=excluded.is_deleted, is_favorite=excluded.is_favorite"
                 )
-                .bind(list.id, list.name, list.updatedAt ?? Date.now(), list.isDeleted ? 1 : 0)
+                .bind(list.id, list.name, list.updatedAt ?? Date.now(), list.isDeleted ? 1 : 0, list.isFavorite ? 1 : 0)
                 .run();
         }
 

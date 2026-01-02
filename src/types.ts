@@ -3,6 +3,7 @@ export type List = {
     name: string;
     updatedAt?: number;
     isDeleted?: boolean;
+    isFavorite?: boolean;
 };
 
 export type Item = {

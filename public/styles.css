@@ -180,6 +180,20 @@ h1 {
     background: var(--overlay-medium);
 }
 
+.modal-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text);
+}
+
+.modal-checkbox input {
+    width: 18px;
+    height: 18px;
+    accent-color: #16a34a;
+}
+
 .modal-textarea {
     width: 100%;
     min-height: 100px;
@@ -299,6 +313,7 @@ h2 {
 }
 
 .tab {
+    position: relative;
     border: 1px solid var(--border);
     background: var(--overlay-light);
     color: var(--text);
@@ -306,11 +321,31 @@ h2 {
     border-radius: 12px;
     cursor: pointer;
     transition: border-color 120ms ease, background 120ms ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 160px;
 }
 
 .tab.active {
     background: rgba(22, 163, 74, 0.2);
     border-color: rgba(22, 163, 74, 0.6);
+}
+
+.tab-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tab-star {
+    position: absolute;
+    top: -1px;
+    right: 0;
+    font-size: 18px;
+    color: #16a34a;
+    opacity: 0.9;
+    pointer-events: none;
 }
 
 .add-list-btn {

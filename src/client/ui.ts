@@ -26,6 +26,24 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
     let currentList = (lastListId && listExists) ? lastListId : (lists[0]?.id ?? "home");
     let localSuggestions = [...suggestions];
 
+    const currentUser = localStorage.getItem('auth-user') || 'default';
+    const favoriteKey = `favorites-${currentUser}`;
+    const loadFavorites = () => {
+        try {
+            const raw = localStorage.getItem(favoriteKey);
+            if (!raw) return new Set<string>();
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) return new Set<string>(parsed);
+            return new Set<string>();
+        } catch {
+            return new Set<string>();
+        }
+    };
+    const saveFavorites = (set: Set<string>) => {
+        localStorage.setItem(favoriteKey, JSON.stringify([...set]));
+    };
+    let favoriteIds = loadFavorites();
+
     const openAddListModal = () => {
         const overlay = document.createElement("div");
         overlay.className = "modal-overlay";
@@ -82,6 +100,18 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
         input.type = "text";
         input.className = "modal-input";
         input.value = list.name;
+
+        const favoriteRow = document.createElement("label");
+        favoriteRow.className = "modal-checkbox";
+
+        const favoriteCheckbox = document.createElement("input");
+        favoriteCheckbox.type = "checkbox";
+        favoriteCheckbox.checked = favoriteIds.has(list.id);
+
+        const favoriteText = document.createElement("span");
+        favoriteText.textContent = "Favorit";
+
+        favoriteRow.append(favoriteCheckbox, favoriteText);
 
         const actions = document.createElement("div");
         actions.className = "modal-actions";
@@ -143,12 +173,18 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
         save.onclick = async () => {
             const name = input.value.trim();
             if (!name) return;
+
+            // Update local-only favorites per user (one favorite max)
+            favoriteIds = favoriteCheckbox.checked ? new Set<string>([list.id]) : new Set<string>();
+            saveFavorites(favoriteIds);
+
             overlay.remove();
+            renderTabs();
             await handlers.onUpdateList({ ...list, name });
         };
 
         actions.append(deleteBtn, cancel, save);
-        modal.append(title, input, actions);
+        modal.append(title, input, favoriteRow, actions);
         overlay.append(modal);
         document.body.appendChild(overlay);
         input.focus();
@@ -238,10 +274,30 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
         plusBtn.onclick = () => openAddListModal();
         tabs.appendChild(plusBtn);
 
-        lists.forEach((list) => {
+        const decorated = [...lists].map((list) => ({ ...list, isFavorite: favoriteIds.has(list.id) }));
+        const sorted = decorated.sort((a, b) => {
+            const favA = a.isFavorite ? 1 : 0;
+            const favB = b.isFavorite ? 1 : 0;
+            if (favA !== favB) return favB - favA;
+            return a.name.localeCompare(b.name);
+        });
+
+        sorted.forEach((list) => {
             const btn = document.createElement("button");
-            btn.textContent = list.name;
             btn.className = list.id === currentList ? "tab active" : "tab";
+
+            const nameSpan = document.createElement("span");
+            nameSpan.className = "tab-name";
+            nameSpan.textContent = list.name;
+            btn.appendChild(nameSpan);
+
+            if (favoriteIds.has(list.id)) {
+                const starSpan = document.createElement("span");
+                starSpan.className = "tab-star";
+                starSpan.textContent = "★";
+                btn.appendChild(starSpan);
+            }
+
             btn.onclick = () => {
                 currentList = list.id;
                 localStorage.setItem('last-viewed-list', list.id);
@@ -251,7 +307,7 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
                 input.focus();
             };
 
-            // Long press handler
+            // Long press handler for edit
             let pressTimer: number | null = null;
             const startPress = () => {
                 if (pressTimer) window.clearTimeout(pressTimer);
