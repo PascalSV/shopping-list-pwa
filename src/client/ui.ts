@@ -88,10 +88,43 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
         deleteBtn.className = "button delete-btn";
         deleteBtn.textContent = "Löschen";
         deleteBtn.onclick = async () => {
-            if (confirm(`Liste "${list.name}" wirklich löschen?`)) {
+            const confirmOverlay = document.createElement("div");
+            confirmOverlay.className = "modal-overlay";
+
+            const confirmModal = document.createElement("div");
+            confirmModal.className = "modal";
+
+            const confirmTitle = document.createElement("h3");
+            confirmTitle.textContent = "Liste wirklich löschen?";
+
+            const confirmMessage = document.createElement("p");
+            confirmMessage.textContent = `"${list.name}" wird dauerhaft gelöscht.`;
+            confirmMessage.style.margin = "12px 0 24px";
+            confirmMessage.style.color = "var(--muted)";
+
+            const confirmActions = document.createElement("div");
+            confirmActions.className = "modal-actions";
+
+            const confirmDeleteBtn = document.createElement("button");
+            confirmDeleteBtn.type = "button";
+            confirmDeleteBtn.className = "button delete-btn";
+            confirmDeleteBtn.textContent = "Löschen bestätigen";
+            confirmDeleteBtn.onclick = async () => {
+                confirmOverlay.remove();
                 overlay.remove();
                 await handlers.onDeleteList(list.id);
-            }
+            };
+
+            const confirmCancelBtn = document.createElement("button");
+            confirmCancelBtn.type = "button";
+            confirmCancelBtn.className = "button primary";
+            confirmCancelBtn.textContent = "Abbrechen";
+            confirmCancelBtn.onclick = () => confirmOverlay.remove();
+
+            confirmActions.append(confirmDeleteBtn, confirmCancelBtn);
+            confirmModal.append(confirmTitle, confirmMessage, confirmActions);
+            confirmOverlay.append(confirmModal);
+            document.body.appendChild(confirmOverlay);
         };
 
         const cancel = document.createElement("button");

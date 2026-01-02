@@ -39,7 +39,6 @@ export type SyncResponse = {
 
 export type Env = {
     DB: D1Database;
-    SYNC_SECRET: string;
     "shopping-list-pwa-token-pascal": string;
     "shopping-list-pwa-token-claudia": string;
 };

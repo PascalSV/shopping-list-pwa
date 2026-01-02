@@ -117,6 +117,12 @@ async function applyMutations(env: Env, body: SyncRequest) {
                 .prepare("UPDATE lists SET is_deleted = 1, updated_at = ? WHERE id = ?")
                 .bind(mutation.updatedAt, mutation.id)
                 .run();
+
+            // Cascade delete items in this list
+            await env.DB
+                .prepare("UPDATE items SET is_deleted = 1, updated_at = ? WHERE list_id = ?")
+                .bind(mutation.updatedAt, mutation.id)
+                .run();
         }
 
         if (mutation.type === "upsert-item") {
@@ -187,7 +193,17 @@ router.get("/api/bootstrap", async (_, env: Env) => {
 
 router.post("/api/sync", async (request: Request, env: Env) => {
     const headerSecret = request.headers.get("x-sync-secret");
-    if (env.SYNC_SECRET && env.SYNC_SECRET !== "set-me-in-dashboard" && headerSecret !== env.SYNC_SECRET) {
+    const headerUser = request.headers.get("x-sync-user");
+
+    // Validate using per-user token
+    if (!headerUser || !headerSecret) {
+        return json({ error: "Missing auth headers" }, 401);
+    }
+
+    const userKey = `shopping-list-pwa-token-${headerUser.toLowerCase()}` as keyof Env;
+    const expectedSecret = env[userKey];
+
+    if (!expectedSecret || headerSecret !== expectedSecret) {
         return json({ error: "Unauthorized" }, 401);
     }
 

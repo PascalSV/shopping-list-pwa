@@ -180,6 +180,19 @@ async function main() {
             const allLists = await getLists();
             const updatedLists = allLists.map(l => l.id === listId ? { ...l, isDeleted: true, updatedAt: now } : l);
             await saveLists(updatedLists);
+
+            // Cascade delete items in this list
+            const allItems = await getItems();
+            const itemsToDelete = allItems.filter(i => i.listId === listId && !i.isDeleted);
+            const updatedItems = itemsToDelete.map(i => ({ ...i, isDeleted: true, updatedAt: now }));
+            await saveItems(updatedItems);
+
+            // Add delete mutations for all items in the list
+            for (const item of itemsToDelete) {
+                const itemMutation: SyncMutation = { type: "delete-item", id: item.id, updatedAt: now };
+                await addPending(itemMutation);
+            }
+
             await addPending(mutation);
             location.reload(); // Reload to remove deleted list from UI
         },
@@ -192,6 +205,13 @@ async function main() {
         ui.updateSuggestions(remote.suggestions);
     }
 
+    // Sync when coming back online
+    window.addEventListener('online', () => {
+        console.log('Back online, syncing now...');
+        syncNow(ui.updateItems, ui.updateSuggestions);
+    });
+
+    // Periodic sync every 15 seconds
     setInterval(() => syncNow(ui.updateItems, ui.updateSuggestions), 15000);
 }
 
