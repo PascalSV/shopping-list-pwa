@@ -139,7 +139,7 @@ async function main() {
                 return;
             }
 
-            const item: Item = { id: uid(), listId, label: trimmedLabel, remark: "", done: false, updatedAt: now };
+            const item: Item = { id: uid(), listId, label: trimmedLabel, remark: "", area: 0, done: false, updatedAt: now };
             await enqueueAndPersist(item);
             ui.updateItems(await getItems());
 

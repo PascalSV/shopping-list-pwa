@@ -159,16 +159,40 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
         modal.className = "modal";
 
         const title = document.createElement("h3");
-        title.textContent = "Notiz zum Artikel";
+        title.textContent = "Artikel bearbeiten";
 
         const subtitle = document.createElement("p");
         subtitle.className = "modal-subtitle";
         subtitle.textContent = item.label;
 
-        const input = document.createElement("textarea");
-        input.className = "modal-textarea";
-        input.value = item.remark ?? "";
-        input.placeholder = "Notiz hinzufügen";
+        const remarkInput = document.createElement("textarea");
+        remarkInput.className = "modal-textarea";
+        remarkInput.value = item.remark ?? "";
+        remarkInput.placeholder = "Notiz hinzufügen";
+
+        const areaLabel = document.createElement("label");
+        areaLabel.textContent = "Bereich im Supermarkt";
+        areaLabel.style.fontSize = "14px";
+        areaLabel.style.color = "var(--muted)";
+        areaLabel.style.marginTop = "8px";
+
+        const areaInput = document.createElement("select");
+        areaInput.className = "modal-input";
+        areaInput.innerHTML = `
+            <option value="0">Nicht zugeordnet</option>
+            <option value="1">Obst & Gemüse</option>
+            <option value="2">Backwaren</option>
+            <option value="3">Milchprodukte</option>
+            <option value="4">Fleisch & Wurst</option>
+            <option value="5">Asia</option>
+            <option value="6">Alkoholika</option>
+            <option value="7">Haushalt & Drogerie</option>
+            <option value="8">Getränke</option>
+            <option value="9">Konserven</option>
+            <option value="10">Süßigkeiten & Knabbereien</option>
+            <option value="11">Tiefkühlwaren</option>
+        `;
+        areaInput.value = String(item.area ?? 0);
 
         const actions = document.createElement("div");
         actions.className = "modal-actions";
@@ -184,19 +208,21 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
         save.className = "button primary";
         save.textContent = "Speichern";
         save.onclick = async () => {
-            const remark = input.value.trim();
+            const remark = remarkInput.value.trim();
+            const area = parseInt(areaInput.value, 10);
             overlay.remove();
-            const updated: Item = { ...item, remark };
+            const updated: Item = { ...item, remark, area };
             await handlers.onUpdateItem(updated);
             item.remark = remark;
+            item.area = area;
             renderItems();
         };
 
         actions.append(cancel, save);
-        modal.append(title, subtitle, input, actions);
+        modal.append(title, subtitle, remarkInput, areaLabel, areaInput, actions);
         overlay.append(modal);
         document.body.appendChild(overlay);
-        input.focus();
+        remarkInput.focus();
     };
 
     const renderTabs = () => {
@@ -252,7 +278,12 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
         }
 
         byList
-            .sort((a, b) => a.label.localeCompare(b.label))
+            .sort((a, b) => {
+                const areaA = a.area ?? 0;
+                const areaB = b.area ?? 0;
+                if (areaA !== areaB) return areaA - areaB;
+                return a.label.localeCompare(b.label);
+            })
             .forEach((item) => {
                 const li = document.createElement("li");
                 li.className = "item";
@@ -276,9 +307,11 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
                 let touchStartX = 0;
                 let touchStartY = 0;
                 let isLongPress = false;
+                let hasMoved = false;
 
                 const startPress = (e: TouchEvent | PointerEvent) => {
                     isLongPress = false;
+                    hasMoved = false;
                     if (e instanceof TouchEvent) {
                         touchStartX = e.touches[0].clientX;
                         touchStartY = e.touches[0].clientY;
@@ -295,16 +328,17 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
 
                 const endPress = async (e: TouchEvent | PointerEvent) => {
                     if (pressTimer) window.clearTimeout(pressTimer);
-                    // If it wasn't a long press and user didn't move much, treat as delete
-                    if (!isLongPress) {
+                    // If it wasn't a long press and user didn't move, treat as delete
+                    if (!isLongPress && !hasMoved) {
                         await handlers.onDeleteItem(item);
                     }
                     pressTimer = null;
                     isLongPress = false;
+                    hasMoved = false;
                 };
 
                 const onMove = (e: TouchEvent | PointerEvent) => {
-                    // Cancel long press if user is scrolling (movement > 10px)
+                    // Cancel actions if user is scrolling (movement > 10px)
                     let currentX = 0;
                     let currentY = 0;
                     if (e instanceof TouchEvent) {
@@ -317,6 +351,7 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
                     const dx = Math.abs(currentX - touchStartX);
                     const dy = Math.abs(currentY - touchStartY);
                     if (dx > 10 || dy > 10) {
+                        hasMoved = true;
                         if (pressTimer) window.clearTimeout(pressTimer);
                         pressTimer = null;
                     }

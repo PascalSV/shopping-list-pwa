@@ -10,6 +10,7 @@ export type Item = {
     listId: string;
     label: string;
     remark?: string;
+    area?: number;
     done: boolean;
     updatedAt: number;
     isDeleted?: boolean;
