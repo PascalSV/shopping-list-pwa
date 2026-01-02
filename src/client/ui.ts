@@ -272,19 +272,13 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
                     content.appendChild(remark);
                 }
 
-                const del = document.createElement("button");
-                del.textContent = "✕";
-                del.className = "delete";
-                del.onclick = async (event) => {
-                    event.stopPropagation();
-                    await handlers.onDeleteItem(item);
-                };
-
                 let pressTimer: number | null = null;
                 let touchStartX = 0;
                 let touchStartY = 0;
+                let isLongPress = false;
 
                 const startPress = (e: TouchEvent | PointerEvent) => {
+                    isLongPress = false;
                     if (e instanceof TouchEvent) {
                         touchStartX = e.touches[0].clientX;
                         touchStartY = e.touches[0].clientY;
@@ -294,13 +288,19 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
                     }
                     if (pressTimer) window.clearTimeout(pressTimer);
                     pressTimer = window.setTimeout(() => {
+                        isLongPress = true;
                         openRemarkModal(item);
                     }, 800); // Longer timeout for long press
                 };
 
-                const cancelPress = (e: TouchEvent | PointerEvent) => {
+                const endPress = async (e: TouchEvent | PointerEvent) => {
                     if (pressTimer) window.clearTimeout(pressTimer);
+                    // If it wasn't a long press and user didn't move much, treat as delete
+                    if (!isLongPress) {
+                        await handlers.onDeleteItem(item);
+                    }
                     pressTimer = null;
+                    isLongPress = false;
                 };
 
                 const onMove = (e: TouchEvent | PointerEvent) => {
@@ -317,18 +317,19 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
                     const dx = Math.abs(currentX - touchStartX);
                     const dy = Math.abs(currentY - touchStartY);
                     if (dx > 10 || dy > 10) {
-                        cancelPress(e);
+                        if (pressTimer) window.clearTimeout(pressTimer);
+                        pressTimer = null;
                     }
                 };
 
                 li.addEventListener("touchstart", startPress as any);
-                li.addEventListener("touchend", cancelPress as any);
+                li.addEventListener("touchend", endPress as any);
                 li.addEventListener("touchmove", onMove as any);
                 li.addEventListener("pointerdown", startPress as any);
-                li.addEventListener("pointerup", cancelPress as any);
+                li.addEventListener("pointerup", endPress as any);
                 li.addEventListener("pointermove", onMove as any);
 
-                li.append(content, del);
+                li.append(content);
                 itemsContainer.appendChild(li);
             });
     };

@@ -12,14 +12,20 @@ export async function postSync(body: SyncRequest): Promise<SyncResponse> {
     const headers: Record<string, string> = { "content-type": "application/json" };
 
     // Get logged-in user and their token
-    const authUser = localStorage.getItem("auth-user") || "Pascal";
+    const authUser = localStorage.getItem("auth-user");
+    if (!authUser) {
+        throw new Error("No authenticated user found");
+    }
+
     const userTokenKey = `shopping-list-pwa-token-${authUser.toLowerCase()}`;
     const token = localStorage.getItem(userTokenKey);
 
-    if (token) {
-        headers["x-sync-secret"] = token;
-        headers["x-sync-user"] = authUser;
+    if (!token) {
+        throw new Error(`No token found for user ${authUser}`);
     }
+
+    headers["x-sync-secret"] = token;
+    headers["x-sync-user"] = authUser;
 
     const res = await fetch(`${API_BASE}/sync`, {
         method: "POST",
