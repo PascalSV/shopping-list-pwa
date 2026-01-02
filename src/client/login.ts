@@ -42,8 +42,10 @@ export async function showLoginScreen(): Promise<boolean> {
                 });
 
                 if (response.ok) {
+                    const tokenValue = passwordInput.value;
                     localStorage.setItem('auth-token', 'authenticated');
                     localStorage.setItem('auth-user', selectedUser);
+                    localStorage.setItem(`shopping-list-pwa-token-${selectedUser.toLowerCase()}`, tokenValue);
                     const loginScreen = document.querySelector<HTMLDivElement>('#login-screen');
                     if (loginScreen) loginScreen.remove();
                     resolve(true);
@@ -73,7 +75,7 @@ function createLoginUI() {
                 <p class="login-subtitle">Wähle Deinen Benutzer und gib das Passwort ein, um fortzufahren</p>
                 <form id="login-form">
                     <div class="form-group">
-                        <label for="login-username">Benutzername</label>
+                        <label for="user-toggle">Benutzername</label>
                         <button type="button" id="user-toggle" class="user-toggle-button">Pascal</button>
                     </div>
                     <div class="form-group">
