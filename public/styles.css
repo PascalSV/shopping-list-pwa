@@ -53,10 +53,10 @@
         --muted: #64748b;
         --accent: #16a34a;
         --text: #0f172a;
-        --border: rgba(15, 23, 42, 0.1);
-        --border-light: rgba(15, 23, 42, 0.05);
-        --overlay-light: rgba(15, 23, 42, 0.04);
-        --overlay-medium: rgba(15, 23, 42, 0.08);
+        --border: rgba(15, 23, 42, 0.2);
+        --border-light: rgba(15, 23, 42, 0.12);
+        --overlay-light: rgba(15, 23, 42, 0.06);
+        --overlay-medium: rgba(15, 23, 42, 0.12);
     }
 }
 
@@ -180,8 +180,8 @@ h2 {
     width: 100%;
     padding: 12px;
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    background: var(--overlay-light);
     color: var(--text);
     font-family: inherit;
     font-size: 16px;
@@ -190,7 +190,7 @@ h2 {
 .modal-input:focus {
     outline: none;
     border-color: rgba(22, 163, 74, 0.6);
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--overlay-medium);
 }
 
 .modal-textarea {
@@ -198,8 +198,8 @@ h2 {
     min-height: 100px;
     padding: 12px;
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    background: var(--overlay-light);
     color: var(--text);
     resize: vertical;
     font-family: inherit;
@@ -208,13 +208,18 @@ h2 {
 .modal-textarea:focus {
     outline: none;
     border-color: rgba(22, 163, 74, 0.6);
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--overlay-medium);
 }
 
 .modal-actions {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
+}
+
+.modal-actions .button {
+    font-size: 13px;
+    padding: 8px 12px;
 }
 
 .button {
@@ -238,7 +243,7 @@ h2 {
 .button.ghost {
     background: transparent;
     color: var(--muted);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid var(--border-light);
 }
 
 .button.primary {
@@ -251,6 +256,14 @@ h2 {
     color: #fca5a5;
     border: 1px solid rgba(220, 38, 38, 0.3);
     margin-right: auto;
+}
+
+@media (prefers-color-scheme: light) {
+    .button.delete-btn {
+        background: rgba(220, 38, 38, 0.15);
+        color: #dc2626;
+        border: 1px solid rgba(220, 38, 38, 0.5);
+    }
 }
 
 .button.delete-btn:hover {
@@ -327,8 +340,8 @@ h2 {
 
 #item-input {
     flex: 1;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: var(--overlay-light);
+    border: 1px solid var(--border);
     color: var(--text);
     font-size: 17px;
     padding: 10px 16px;
@@ -340,7 +353,7 @@ h2 {
 }
 
 #item-input:focus {
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--overlay-medium);
     border-color: rgba(22, 163, 74, 0.5);
 }
 
@@ -363,7 +376,7 @@ h2 {
 }
 
 .cancel-btn {
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--border-light);
     background: transparent;
     color: var(--text);
     padding: 8px 16px;
@@ -376,8 +389,8 @@ h2 {
 }
 
 .cancel-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.35);
+    background: var(--overlay-medium);
+    border-color: var(--border);
 }
 
 .cancel-btn:active {
@@ -444,7 +457,7 @@ h2 {
     padding-left: max(24px, calc(24px + env(safe-area-inset-left)));
     padding-right: max(24px, calc(24px + env(safe-area-inset-right)));
     padding-bottom: max(24px, calc(24px + env(safe-area-inset-bottom)));
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid var(--border-light);
     z-index: 100;
 }
 
@@ -469,8 +482,8 @@ h2 {
 }
 
 .suggestion {
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-light);
+    background: var(--overlay-light);
     color: var(--text);
     border-radius: 12px;
     padding: 8px 10px;
@@ -485,7 +498,8 @@ h2 {
     gap: 12px;
     padding: 10px 12px;
     border-radius: 12px;
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--overlay-light);
+    border: 1px solid var(--border-light);
 }
 
 .item-content {
