@@ -22,6 +22,17 @@ const fallbackLists: List[] = [
     { id: "ikea", name: "IKEA" },
 ];
 
+let wakeLock: WakeLockSentinel | null = null;
+
+async function requestWakeLock() {
+    try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        console.log('Wake Lock enabled');
+    } catch (err) {
+        console.warn('Wake Lock error:', err);
+    }
+}
+
 async function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
         try {
@@ -110,6 +121,7 @@ async function main() {
     }
 
     await registerServiceWorker();
+    await requestWakeLock();
 
     const local = await hydrateFromLocal();
     let suggestionState: Suggestion[] = local.suggestions;
