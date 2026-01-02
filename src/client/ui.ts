@@ -378,10 +378,15 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
         const normalized = query.trim().toLowerCase();
         if (!normalized) return;
 
+        // Get items already on current list
+        const itemsOnList = items
+            .filter((item) => item.listId === currentList && !item.isDeleted)
+            .map((item) => item.label.toLowerCase());
+
         console.log('Searching for:', normalized, 'in', localSuggestions.length, 'suggestions');
 
         const matches = localSuggestions
-            .filter((s) => s.label.toLowerCase().includes(normalized))
+            .filter((s) => s.label.toLowerCase().includes(normalized) && !itemsOnList.includes(s.label.toLowerCase()))
             .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
             .slice(0, 5);
 
