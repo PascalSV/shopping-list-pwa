@@ -10,5 +10,11 @@ assets = { directory = "./public" }
 # - shopping-list-pwa-token-claudia: Password/token for Claudia user
 # These are automatically bound to env.shopping-list-pwa-token-pascal and env.shopping-list-pwa-token-claudia
 
+[[routes]]
+pattern = "shopping-list.everyday-apps.org"
+custom_domain = true
+
+[[d1_databases]]
+binding = "DB"
 database_name = "shopping-list-pwa"
 database_id = "02905165-2d5b-417c-ad57-4c03fb346c47"
