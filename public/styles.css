@@ -520,7 +520,7 @@ h2 {
 .item {
     display: flex;
     align-items: center;
-    min-height: 72px;
+    height: 72px;
     padding: 10px 12px;
     border-radius: 12px;
     background: var(--overlay-light);

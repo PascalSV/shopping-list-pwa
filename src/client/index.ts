@@ -86,6 +86,17 @@ async function syncNow(updateItems: (items: Item[]) => void, updateSuggestions: 
         ]);
         const localItems = await getItems();
         const localSuggestions = await getSuggestions();
+        const remoteLists = response.lists;
+        const localLists = await getLists();
+
+        // Check if list count changed (new lists synced from other device)
+        const localActiveCount = localLists.filter(l => !l.isDeleted).length;
+        const remoteActiveCount = remoteLists.filter(l => !l.isDeleted).length;
+        if (remoteActiveCount > localActiveCount) {
+            console.log(`New lists detected (${remoteActiveCount} remote vs ${localActiveCount} local), reloading...`);
+            location.reload();
+        }
+
         updateItems(localItems);
         updateSuggestions(localSuggestions);
     } catch (err) {
@@ -139,7 +150,7 @@ async function main() {
                 return;
             }
 
-            const item: Item = { id: uid(), listId, label: trimmedLabel, remark: "", area: 0, done: false, updatedAt: now };
+            const item: Item = { id: uid(), listId, label: trimmedLabel, remark: "", area: 12, done: false, updatedAt: now };
             await enqueueAndPersist(item);
             ui.updateItems(await getItems());
 
@@ -213,6 +224,12 @@ async function main() {
     const remote = await bootstrapFromRemote();
     if (remote) {
         suggestionState = remote.suggestions;
+        // Check if new lists were synced from remote
+        const localLists = await getLists();
+        if (remote.lists.length > localLists.filter(l => !l.isDeleted).length) {
+            // New lists were added remotely, reload to refresh UI
+            location.reload();
+        }
         ui.updateItems(remote.items);
         ui.updateSuggestions(remote.suggestions);
     }

@@ -182,7 +182,7 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
         const areaInput = document.createElement("select");
         areaInput.className = "modal-input";
         areaInput.innerHTML = `
-            <option value="0">Nicht zugeordnet</option>
+            <option value="99">Nicht zugeordnet</option>
             <option value="1">Obst & Gemüse</option>
             <option value="2">Backwaren</option>
             <option value="3">Milchprodukte</option>
@@ -195,7 +195,7 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
             <option value="10">Süßigkeiten & Knabbereien</option>
             <option value="11">Tiefkühlwaren</option>
         `;
-        areaInput.value = String(item.area ?? 0);
+        areaInput.value = String(item.area ?? 12);
 
         const actions = document.createElement("div");
         actions.className = "modal-actions";
