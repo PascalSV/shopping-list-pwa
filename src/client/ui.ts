@@ -431,7 +431,8 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
 
     renderTabs();
     renderItems();
-    listTitle.textContent = lists[0]?.name ?? "Home";
+    const currentListObj = lists.find(l => l.id === currentList);
+    listTitle.textContent = currentListObj?.name ?? "Home";
 
     return {
         updateItems(newItems: Item[]) {
