@@ -1,7 +1,7 @@
-import { Item, List, SyncMutation } from "../types";
+import { Item, List, Suggestion, SyncMutation } from "../types";
 
 const DB_NAME = "shopping-list";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE_LISTS = "lists";
 const STORE_ITEMS = "items";
 const STORE_PENDING = "pending";
@@ -84,7 +84,7 @@ export async function saveSuggestions(suggestions: { label: string; count: numbe
     });
 }
 
-export async function getSuggestions(): Promise<{ label: string; count: number }[]> {
+export async function getSuggestions(): Promise<Suggestion[]> {
     return transaction([STORE_SUGGESTIONS], "readonly", async (tx) => {
         const store = tx.objectStore(STORE_SUGGESTIONS);
         return await requestAll(store.getAll());
@@ -107,6 +107,12 @@ export async function getPending(): Promise<SyncMutation[]> {
 export async function clearPending() {
     await transaction([STORE_PENDING], "readwrite", async (tx) => {
         tx.objectStore(STORE_PENDING).clear();
+    });
+}
+
+export async function clearLists() {
+    await transaction([STORE_LISTS], "readwrite", async (tx) => {
+        tx.objectStore(STORE_LISTS).clear();
     });
 }
 

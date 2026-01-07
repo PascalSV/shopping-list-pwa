@@ -1,10 +1,11 @@
 {
-    "name": "Shopping Lists",
-    "short_name": "Lists",
+    "name": "Pascals Einkaufsliste",
+    "short_name": "Einkaufsliste",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#0b3941",
     "theme_color": "#0f766e",
+    "scope": "/",
     "icons": [
         {
             "src": "/icon-192.svg",
@@ -17,6 +18,23 @@
             "sizes": "512x512",
             "type": "image/svg+xml",
             "purpose": "any"
+        },
+        {
+            "src": "/icon-192.svg",
+            "sizes": "180x180",
+            "type": "image/svg+xml",
+            "purpose": "maskable"
         }
+    ],
+    "screenshots": [
+        {
+            "src": "/icon-512.svg",
+            "sizes": "540x720",
+            "type": "image/svg+xml",
+            "form_factor": "narrow"
+        }
+    ],
+    "categories": [
+        "productivity"
     ]
 }

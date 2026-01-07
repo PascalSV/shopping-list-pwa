@@ -1,15 +1,14 @@
 import { fetchBootstrap, postSync } from "./api";
-import { isAuthenticated, showLoginScreen } from "./login";
+import { isAuthenticated, showLoginScreen, logout } from "./login";
 import {
     addPending,
+    clearLists,
     clearPending,
     getCursor,
     getItems,
-    getLists,
     getPending,
     getSuggestions,
     saveItems,
-    saveLists,
     saveSuggestions,
     setCursor,
 } from "./db";
@@ -17,10 +16,19 @@ import { mountUI } from "./ui";
 import { Item, List, Suggestion, SyncMutation, SyncRequest } from "../types";
 
 const fallbackLists: List[] = [
-    { id: "home", name: "Home" },
-    { id: "party", name: "Party" },
-    { id: "ikea", name: "IKEA" },
+    { id: "shopping-list", name: "Shopping List", updatedAt: 0, isDeleted: false },
 ];
+
+let wakeLock: WakeLockSentinel | null = null;
+
+async function requestWakeLock() {
+    try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        console.log('Wake Lock enabled');
+    } catch (err) {
+        console.warn('Wake Lock error:', err);
+    }
+}
 
 async function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
@@ -37,15 +45,20 @@ function uid() {
 }
 
 async function hydrateFromLocal() {
-    const [lists, items, suggestions] = await Promise.all([getLists(), getItems(), getSuggestions()]);
-    return { lists: lists.length ? lists : fallbackLists, items, suggestions };
+    // Clear any old cached lists from previous multi-list version
+    await clearLists();
+
+    const [items, suggestions] = await Promise.all([getItems(), getSuggestions()]);
+    return { lists: fallbackLists, items, suggestions };
 }
 
 async function bootstrapFromRemote() {
     try {
         const data = await fetchBootstrap();
-        await Promise.all([saveLists(data.lists), saveItems(data.items), saveSuggestions(data.suggestions), setCursor(data.cursor)]);
-        return { lists: data.lists, items: data.items, suggestions: data.suggestions };
+        // Clear old lists and only keep the single default shopping list
+        await clearLists();
+        await Promise.all([saveItems(data.items), saveSuggestions(data.suggestions), setCursor(data.cursor)]);
+        return { lists: fallbackLists, items: data.items, suggestions: data.suggestions };
     } catch (err) {
         console.warn("Bootstrap failed, staying offline", err);
         return null;
@@ -54,9 +67,11 @@ async function bootstrapFromRemote() {
 
 async function enqueueAndPersist(item: Item, isDelete = false) {
     await saveItems([item]);
+    // Sanitize item: convert null/undefined area to 99 (unassigned)
+    const sanitizedItem = { ...item, area: item.area ?? 99 };
     const mutation: SyncMutation = isDelete
         ? { type: "delete-item", id: item.id, updatedAt: item.updatedAt }
-        : { type: "upsert-item", item };
+        : { type: "upsert-item", item: sanitizedItem };
     await addPending(mutation);
 }
 
@@ -66,7 +81,6 @@ async function syncNow(updateItems: (items: Item[]) => void, updateSuggestions: 
     try {
         const response = await postSync(body);
         await Promise.all([
-            saveLists(response.lists),
             saveItems(response.items),
             saveSuggestions(response.suggestions),
             clearPending(),
@@ -74,9 +88,15 @@ async function syncNow(updateItems: (items: Item[]) => void, updateSuggestions: 
         ]);
         const localItems = await getItems();
         const localSuggestions = await getSuggestions();
+
         updateItems(localItems);
         updateSuggestions(localSuggestions);
     } catch (err) {
+        const status = (err as { status?: number }).status;
+        if (status === 401) {
+            logout();
+            return;
+        }
         console.warn("Sync failed, will retry later", err);
     }
 }
@@ -104,12 +124,14 @@ async function main() {
     }
 
     await registerServiceWorker();
+    await requestWakeLock();
 
     const local = await hydrateFromLocal();
     let suggestionState: Suggestion[] = local.suggestions;
 
-    const ui = mountUI(local.lists, local.items, local.suggestions, {
+    const ui = mountUI(local.items, suggestionState, {
         onAddItem: async (listId, label) => {
+            if (!ui) return;
             const now = Date.now();
             const trimmedLabel = label.trim();
             const existingItems = await getItems();
@@ -121,7 +143,7 @@ async function main() {
                 return;
             }
 
-            const item: Item = { id: uid(), listId, label: trimmedLabel, remark: "", done: false, updatedAt: now };
+            const item: Item = { id: uid(), listId, label: trimmedLabel, remark: "", area: 99, done: false, updatedAt: now };
             await enqueueAndPersist(item);
             ui.updateItems(await getItems());
 
@@ -152,6 +174,11 @@ async function main() {
         },
     });
 
+    if (!ui) {
+        console.error("Failed to mount UI - missing DOM elements");
+        return;
+    }
+
     const remote = await bootstrapFromRemote();
     if (remote) {
         suggestionState = remote.suggestions;
@@ -159,7 +186,14 @@ async function main() {
         ui.updateSuggestions(remote.suggestions);
     }
 
-    setInterval(() => syncNow(ui.updateItems, ui.updateSuggestions), 15000);
+    // Sync when coming back online
+    window.addEventListener('online', () => {
+        console.log('Back online, syncing now...');
+        syncNow(ui.updateItems, ui.updateSuggestions);
+    });
+
+    // Periodic sync every 7.5 seconds
+    setInterval(() => syncNow(ui.updateItems, ui.updateSuggestions), 7500);
 }
 
 main().catch((err) => console.error(err));

@@ -1,6 +1,9 @@
 export type List = {
     id: string;
     name: string;
+    updatedAt?: number;
+    isDeleted?: boolean;
+    isFavorite?: boolean;
 };
 
 export type Item = {
@@ -8,6 +11,7 @@ export type Item = {
     listId: string;
     label: string;
     remark?: string;
+    area?: number;
     done: boolean;
     updatedAt: number;
     isDeleted?: boolean;
@@ -16,10 +20,14 @@ export type Item = {
 export type Suggestion = {
     label: string;
     displayLabel: string;
+    count: number;
+};
 
 export type SyncMutation =
     | { type: "upsert-item"; item: Item }
-    | { type: "delete-item"; id: string; updatedAt: number };
+    | { type: "delete-item"; id: string; updatedAt: number }
+    | { type: "upsert-list"; list: List }
+    | { type: "delete-list"; id: string; updatedAt: number };
 
 export type SyncRequest = {
     since?: number;
@@ -35,7 +43,6 @@ export type SyncResponse = {
 
 export type Env = {
     DB: D1Database;
-    SYNC_SECRET: string;
     "shopping-list-pwa-token-pascal": string;
     "shopping-list-pwa-token-claudia": string;
 };

@@ -42,8 +42,9 @@ export async function showLoginScreen(): Promise<boolean> {
                 });
 
                 if (response.ok) {
-                    localStorage.setItem('auth-token', 'authenticated');
-                    localStorage.setItem('auth-user', selectedUser);
+                    const result = await response.json() as { success: boolean; token: string; user: string };
+                    localStorage.setItem('session-token', result.token);
+                    localStorage.setItem('auth-user', result.user);
                     const loginScreen = document.querySelector<HTMLDivElement>('#login-screen');
                     if (loginScreen) loginScreen.remove();
                     resolve(true);
@@ -73,7 +74,7 @@ function createLoginUI() {
                 <p class="login-subtitle">Wähle Deinen Benutzer und gib das Passwort ein, um fortzufahren</p>
                 <form id="login-form">
                     <div class="form-group">
-                        <label for="login-username">Benutzername</label>
+                        <label for="user-toggle">Benutzername</label>
                         <button type="button" id="user-toggle" class="user-toggle-button">Pascal</button>
                     </div>
                     <div class="form-group">
@@ -90,10 +91,19 @@ function createLoginUI() {
 }
 
 export function isAuthenticated(): boolean {
-    return localStorage.getItem('auth-token') === 'authenticated';
+    const hasToken = !!localStorage.getItem('session-token');
+    const hasUser = !!localStorage.getItem('auth-user');
+
+    // If token exists but user is missing, clear auth and force re-login
+    if (hasToken && !hasUser) {
+        localStorage.removeItem('session-token');
+    }
+
+    return hasToken && hasUser;
 }
 
 export function logout() {
-    localStorage.removeItem('auth-token');
+    localStorage.removeItem('session-token');
+    localStorage.removeItem('auth-user');
     window.location.reload();
 }
