@@ -20,6 +20,8 @@ export type Item = {
 export type Suggestion = {
     label: string;
     displayLabel: string;
+    count: number;
+};
 
 export type SyncMutation =
     | { type: "upsert-item"; item: Item }

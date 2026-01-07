@@ -42,10 +42,9 @@ export async function showLoginScreen(): Promise<boolean> {
                 });
 
                 if (response.ok) {
-                    const tokenValue = passwordInput.value;
-                    localStorage.setItem('auth-token', 'authenticated');
-                    localStorage.setItem('auth-user', selectedUser);
-                    localStorage.setItem(`shopping-list-pwa-token-${selectedUser.toLowerCase()}`, tokenValue);
+                    const result = await response.json() as { success: boolean; token: string; user: string };
+                    localStorage.setItem('session-token', result.token);
+                    localStorage.setItem('auth-user', result.user);
                     const loginScreen = document.querySelector<HTMLDivElement>('#login-screen');
                     if (loginScreen) loginScreen.remove();
                     resolve(true);
@@ -92,10 +91,19 @@ function createLoginUI() {
 }
 
 export function isAuthenticated(): boolean {
-    return localStorage.getItem('auth-token') === 'authenticated';
+    const hasToken = !!localStorage.getItem('session-token');
+    const hasUser = !!localStorage.getItem('auth-user');
+
+    // If token exists but user is missing, clear auth and force re-login
+    if (hasToken && !hasUser) {
+        localStorage.removeItem('session-token');
+    }
+
+    return hasToken && hasUser;
 }
 
 export function logout() {
-    localStorage.removeItem('auth-token');
+    localStorage.removeItem('session-token');
+    localStorage.removeItem('auth-user');
     window.location.reload();
 }

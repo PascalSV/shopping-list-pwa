@@ -66,9 +66,11 @@ async function bootstrapFromRemote() {
 
 async function enqueueAndPersist(item: Item, isDelete = false) {
     await saveItems([item]);
+    // Sanitize item: convert null/undefined area to 99 (unassigned)
+    const sanitizedItem = { ...item, area: item.area ?? 99 };
     const mutation: SyncMutation = isDelete
         ? { type: "delete-item", id: item.id, updatedAt: item.updatedAt }
-        : { type: "upsert-item", item };
+        : { type: "upsert-item", item: sanitizedItem };
     await addPending(mutation);
 }
 
@@ -89,11 +91,11 @@ async function syncNow(updateItems: (items: Item[]) => void, updateSuggestions: 
         const remoteLists = response.lists;
         const localLists = await getLists();
 
-        // Check if list count changed (new lists synced from other device)
+        // Check if list count changed (new or deleted lists synced from other device)
         const localActiveCount = localLists.filter(l => !l.isDeleted).length;
         const remoteActiveCount = remoteLists.filter(l => !l.isDeleted).length;
-        if (remoteActiveCount > localActiveCount) {
-            console.log(`New lists detected (${remoteActiveCount} remote vs ${localActiveCount} local), reloading...`);
+        if (remoteActiveCount !== localActiveCount) {
+            console.log(`List count changed (${remoteActiveCount} remote vs ${localActiveCount} local), reloading...`);
             location.reload();
         }
 
@@ -137,8 +139,9 @@ async function main() {
     const local = await hydrateFromLocal();
     let suggestionState: Suggestion[] = local.suggestions;
 
-    const ui = mountUI(local.lists, local.items, local.suggestions, {
+    const ui = mountUI(local.lists, local.items, suggestionState, {
         onAddItem: async (listId, label) => {
+            if (!ui) return;
             const now = Date.now();
             const trimmedLabel = label.trim();
             const existingItems = await getItems();
@@ -150,7 +153,7 @@ async function main() {
                 return;
             }
 
-            const item: Item = { id: uid(), listId, label: trimmedLabel, remark: "", area: 12, done: false, updatedAt: now };
+            const item: Item = { id: uid(), listId, label: trimmedLabel, remark: "", area: 99, done: false, updatedAt: now };
             await enqueueAndPersist(item);
             ui.updateItems(await getItems());
 
@@ -185,6 +188,7 @@ async function main() {
             const mutation: SyncMutation = { type: "upsert-list", list: newList };
             await saveLists([...(await getLists()), newList]);
             await addPending(mutation);
+            await syncNow(ui.updateItems, ui.updateSuggestions);
             location.reload(); // Reload to reinitialize UI with new list
         },
         onUpdateList: async (list: List) => {
@@ -195,6 +199,7 @@ async function main() {
             const updatedLists = allLists.map(l => l.id === list.id ? updated : l);
             await saveLists(updatedLists);
             await addPending(mutation);
+            await syncNow(ui.updateItems, ui.updateSuggestions);
             location.reload(); // Reload to show updated list name
         },
         onDeleteList: async (listId: string) => {
@@ -217,19 +222,19 @@ async function main() {
             }
 
             await addPending(mutation);
+            await syncNow(ui.updateItems, ui.updateSuggestions);
             location.reload(); // Reload to remove deleted list from UI
         },
     });
 
+    if (!ui) {
+        console.error("Failed to mount UI - missing DOM elements");
+        return;
+    }
+
     const remote = await bootstrapFromRemote();
     if (remote) {
         suggestionState = remote.suggestions;
-        // Check if new lists were synced from remote
-        const localLists = await getLists();
-        if (remote.lists.length > localLists.filter(l => !l.isDeleted).length) {
-            // New lists were added remotely, reload to refresh UI
-            location.reload();
-        }
         ui.updateItems(remote.items);
         ui.updateSuggestions(remote.suggestions);
     }
@@ -240,8 +245,8 @@ async function main() {
         syncNow(ui.updateItems, ui.updateSuggestions);
     });
 
-    // Periodic sync every 15 seconds
-    setInterval(() => syncNow(ui.updateItems, ui.updateSuggestions), 15000);
+    // Periodic sync every 7.5 seconds
+    setInterval(() => syncNow(ui.updateItems, ui.updateSuggestions), 7500);
 }
 
 main().catch((err) => console.error(err));

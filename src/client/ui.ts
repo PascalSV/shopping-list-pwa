@@ -180,7 +180,7 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
 
             overlay.remove();
             renderTabs();
-            await handlers.onUpdateList({ ...list, name });
+            await handlers.onUpdateList({ ...list, name, isFavorite: favoriteCheckbox.checked });
         };
 
         actions.append(deleteBtn, cancel, save);
@@ -231,7 +231,7 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
             <option value="10">Süßigkeiten & Knabbereien</option>
             <option value="11">Tiefkühlwaren</option>
         `;
-        areaInput.value = String(item.area ?? 12);
+        areaInput.value = String(item.area ?? 99);
 
         const actions = document.createElement("div");
         actions.className = "modal-actions";
@@ -301,7 +301,8 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
             btn.onclick = () => {
                 currentList = list.id;
                 localStorage.setItem('last-viewed-list', list.id);
-                listTitle.textContent = list.name;
+                const itemCount = items.filter(i => i.listId === list.id && !i.isDeleted).length;
+                listTitle.textContent = `${list.name} (${itemCount})`;
                 renderTabs();
                 renderItems();
                 input.focus();
@@ -493,12 +494,16 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
     renderTabs();
     renderItems();
     const currentListObj = lists.find(l => l.id === currentList);
-    listTitle.textContent = currentListObj?.name ?? "Home";
+    const itemCount = items.filter(i => i.listId === currentList && !i.isDeleted).length;
+    listTitle.textContent = `${currentListObj?.name ?? "Home"} (${itemCount})`;
 
     return {
         updateItems(newItems: Item[]) {
             items.splice(0, items.length, ...newItems);
             renderItems();
+            const currentListObj = lists.find(l => l.id === currentList);
+            const itemCount = items.filter(i => i.listId === currentList && !i.isDeleted).length;
+            listTitle.textContent = `${currentListObj?.name ?? "Home"} (${itemCount})`;
         },
         updateSuggestions(newSuggestions: Suggestion[]) {
             localSuggestions = [...newSuggestions];

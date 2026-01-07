@@ -53,7 +53,7 @@ async function listLists(env: Env): Promise<List[]> {
 async function listItems(env: Env, since = 0): Promise<Item[]> {
     const result = await env.DB
         .prepare(
-            "SELECT id, list_id as listId, label, remark, area, done, updated_at as updatedAt, is_deleted as isDeleted FROM items WHERE updated_at > ?"
+            "SELECT id, list_id as listId, label, remark, area, done, updated_at as updatedAt, is_deleted as isDeleted FROM items WHERE updated_at >= ?"
         )
         .bind(since)
         .all<Item>();
@@ -71,8 +71,12 @@ async function listSuggestions(env: Env): Promise<Suggestion[]> {
     try {
         const result = await env.DB
             .prepare("SELECT label, display_label as displayLabel, count FROM articles ORDER BY count DESC, label ASC LIMIT 20")
-            .all<Suggestion>();
-        return result.results ?? [];
+            .all<any>();
+        return (result.results ?? []).map(row => ({
+            label: row.label,
+            displayLabel: row.displayLabel,
+            count: row.count
+        }));
     } catch (err) {
         console.warn("listSuggestions failed", err);
         return [];
@@ -176,7 +180,7 @@ router.options("/api/*", () =>
         headers: {
             "access-control-allow-origin": "*",
             "access-control-allow-methods": "GET,POST,OPTIONS",
-            "access-control-allow-headers": "content-type,x-sync-secret",
+            "access-control-allow-headers": "content-type,x-session-token",
         },
     })
 );
@@ -196,20 +200,22 @@ router.get("/api/bootstrap", async (_, env: Env) => {
 });
 
 router.post("/api/sync", async (request: Request, env: Env) => {
-    const headerSecret = request.headers.get("x-sync-secret");
-    const headerUser = request.headers.get("x-sync-user");
+    const sessionToken = request.headers.get("x-session-token");
 
-    // Validate using per-user token
-    if (!headerUser || !headerSecret) {
-        return json({ error: "Missing auth headers" }, 401);
+    // Validate session token
+    if (!sessionToken) {
+        return json({ error: "Missing session token" }, 401);
     }
 
-    const userKey = `shopping-list-pwa-token-${headerUser.toLowerCase()}` as keyof Env;
-    const expectedSecret = env[userKey];
+    const session = await env.DB.prepare(
+        "SELECT user, expires_at FROM sessions WHERE token = ?"
+    ).bind(sessionToken).first<{ user: string; expires_at: number }>();
 
-    if (!expectedSecret || headerSecret !== expectedSecret) {
-        return json({ error: "Unauthorized" }, 401);
+    if (!session || session.expires_at < Date.now()) {
+        return json({ error: "Invalid or expired session" }, 401);
     }
+
+    const headerUser = session.user;
 
     let parsed: SyncRequest;
     try {
@@ -242,7 +248,16 @@ router.post("/api/login", async (request: Request, env: Env) => {
         const token = env[secretKey];
         if (!token) return json({ error: "No token configured" }, 500);
         if (data.password === token) {
-            return json({ success: true, token: "authenticated" });
+            // Generate unique session token
+            const sessionToken = crypto.randomUUID();
+            const expiresAt = Date.now() + (30 * 24 * 60 * 60 * 1000); // 30 days
+
+            // Store session in KV or DB (using DB for now)
+            await env.DB.prepare(
+                "INSERT OR REPLACE INTO sessions (token, user, expires_at) VALUES (?, ?, ?)"
+            ).bind(sessionToken, data.user, expiresAt).run();
+
+            return json({ success: true, token: sessionToken, user: data.user });
         }
         return json({ error: "Invalid password" }, 401);
     } catch (err) {
