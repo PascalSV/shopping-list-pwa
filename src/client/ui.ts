@@ -20,8 +20,6 @@ export function mountUI(items: Item[], suggestions: Suggestion[], handlers: UIHa
     let currentList = items[0]?.listId ?? "shopping-list";
     let localSuggestions = [...suggestions];
 
-
-
     const openRemarkModal = (item: Item) => {
         const overlay = document.createElement("div");
         overlay.className = "modal-overlay";
@@ -95,8 +93,6 @@ export function mountUI(items: Item[], suggestions: Suggestion[], handlers: UIHa
         document.body.appendChild(overlay);
         remarkInput.focus();
     };
-
-
 
     const renderItems = () => {
         itemsContainer.innerHTML = "";

@@ -1,6 +1,6 @@
 import { Router } from "itty-router";
 import { z } from "zod";
-import { Env, Item, List, Suggestion, SyncRequest, SyncResponse } from "./types";
+import { Env, Item, Suggestion, SyncRequest, SyncResponse } from "./types";
 
 const router = Router();
 
@@ -18,17 +18,6 @@ const itemSchema = z.object({
 const mutationSchema = z.discriminatedUnion("type", [
     z.object({ type: z.literal("upsert-item"), item: itemSchema }),
     z.object({ type: z.literal("delete-item"), id: z.string().min(1), updatedAt: z.number().int().nonnegative() }),
-    z.object({
-        type: z.literal("upsert-list"),
-        list: z.object({
-            id: z.string().min(1),
-            name: z.string().min(1),
-            updatedAt: z.number().int().nonnegative().optional(),
-            isDeleted: z.boolean().optional(),
-            isFavorite: z.boolean().optional(),
-        })
-    }),
-    z.object({ type: z.literal("delete-list"), id: z.string().min(1), updatedAt: z.number().int().nonnegative() }),
 ]);
 
 const syncSchema = z.object({
@@ -44,11 +33,6 @@ const json = (data: unknown, status = 200) =>
             "access-control-allow-origin": "*",
         },
     });
-
-async function listLists(env: Env): Promise<List[]> {
-    const result = await env.DB.prepare("SELECT id, name, updated_at as updatedAt, is_deleted as isDeleted, is_favorite as isFavorite FROM lists ORDER BY is_favorite DESC, name ASC").all<List>();
-    return (result.results ?? []).map((row) => ({ ...row, updatedAt: row.updatedAt || 0, isDeleted: Boolean(row.isDeleted), isFavorite: Boolean(row.isFavorite) }));
-}
 
 async function listItems(env: Env, since = 0): Promise<Item[]> {
     const result = await env.DB
@@ -99,38 +83,6 @@ async function incrementSuggestion(env: Env, label: string, displayLabel: string
 
 async function applyMutations(env: Env, body: SyncRequest) {
     for (const mutation of body.mutations) {
-        if (mutation.type === "upsert-list") {
-            const list = mutation.list;
-            const current = await env.DB
-                .prepare("SELECT updated_at, is_deleted FROM lists WHERE id = ?")
-                .bind(list.id)
-                .first<{ updated_at: number; is_deleted: number }>();
-            if (current && current.updated_at > (list.updatedAt ?? 0)) continue;
-
-            await env.DB
-                .prepare(
-                    "INSERT INTO lists (id, name, updated_at, is_deleted, is_favorite) VALUES (?, ?, ?, ?, ?) " +
-                    "ON CONFLICT(id) DO UPDATE SET name=excluded.name, updated_at=excluded.updated_at, is_deleted=excluded.is_deleted, is_favorite=excluded.is_favorite"
-                )
-                .bind(list.id, list.name, list.updatedAt ?? Date.now(), list.isDeleted ? 1 : 0, list.isFavorite ? 1 : 0)
-                .run();
-        }
-
-        if (mutation.type === "delete-list") {
-            const current = await env.DB.prepare("SELECT updated_at FROM lists WHERE id = ?").bind(mutation.id).first<{ updated_at: number }>();
-            if (current && current.updated_at > mutation.updatedAt) continue;
-
-            await env.DB
-                .prepare("UPDATE lists SET is_deleted = 1, updated_at = ? WHERE id = ?")
-                .bind(mutation.updatedAt, mutation.id)
-                .run();
-
-            // Cascade delete items in this list
-            await env.DB
-                .prepare("UPDATE items SET is_deleted = 1, updated_at = ? WHERE list_id = ?")
-                .bind(mutation.updatedAt, mutation.id)
-                .run();
-        }
 
         if (mutation.type === "upsert-item") {
             const item = mutation.item;
@@ -188,11 +140,10 @@ router.options("/api/*", () =>
 router.get("/api/health", () => new Response("ok"));
 
 router.get("/api/bootstrap", async (_, env: Env) => {
-    const [lists, items, suggestions] = await Promise.all([listLists(env), listItems(env, 0), listSuggestions(env)]);
+    const [items, suggestions] = await Promise.all([listItems(env, 0), listSuggestions(env)]);
     const cursor = Date.now();
     const payload: SyncResponse = {
         cursor,
-        lists: lists.filter(l => !l.isDeleted),
         items,
         suggestions
     };
@@ -227,10 +178,9 @@ router.post("/api/sync", async (request: Request, env: Env) => {
 
     await applyMutations(env, parsed);
     const cursor = Date.now();
-    const [lists, items, suggestions] = await Promise.all([listLists(env), listItems(env, parsed.since ?? 0), listSuggestions(env)]);
+    const [items, suggestions] = await Promise.all([listItems(env, parsed.since ?? 0), listSuggestions(env)]);
     const payload: SyncResponse = {
         cursor,
-        lists: lists.filter(l => !l.isDeleted),
         items,
         suggestions
     };

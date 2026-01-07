@@ -299,6 +299,38 @@ h2 {
     }
 }
 
+.tab-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tab-star {
+    position: absolute;
+    top: -1px;
+    right: 0;
+    font-size: 18px;
+    color: #16a34a;
+    opacity: 0.9;
+    pointer-events: none;
+}
+
+.add-list-btn {
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: sticky;
+    left: 0;
+    flex-shrink: 0;
+    background: var(--card);
+    z-index: 1;
+}
+
+.add-list-btn svg {
+    display: block;
+}
+
 .add-row {
     display: grid;
     grid-template-columns: 1fr auto;
