@@ -13,7 +13,9 @@ export async function postSync(body: SyncRequest): Promise<SyncResponse> {
 
     const sessionToken = localStorage.getItem("session-token");
     if (!sessionToken) {
-        throw new Error("No session token found");
+        const err = new Error("No session token found") as Error & { status?: number };
+        err.status = 401;
+        throw err;
     }
 
     headers["x-session-token"] = sessionToken;

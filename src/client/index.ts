@@ -6,9 +6,11 @@ import {
     clearPending,
     getCursor,
     getItems,
+    getLists,
     getPending,
     getSuggestions,
     saveItems,
+    saveLists,
     saveSuggestions,
     setCursor,
 } from "./db";
@@ -45,20 +47,16 @@ function uid() {
 }
 
 async function hydrateFromLocal() {
-    // Clear any old cached lists from previous multi-list version
-    await clearLists();
-
-    const [items, suggestions] = await Promise.all([getItems(), getSuggestions()]);
-    return { lists: fallbackLists, items, suggestions };
+    const [lists, items, suggestions] = await Promise.all([getLists(), getItems(), getSuggestions()]);
+    const activeLists = lists.filter(l => !l.isDeleted);
+    return { lists: activeLists.length ? activeLists : fallbackLists, items, suggestions };
 }
 
 async function bootstrapFromRemote() {
     try {
         const data = await fetchBootstrap();
-        // Clear old lists and only keep the single default shopping list
-        await clearLists();
-        await Promise.all([saveItems(data.items), saveSuggestions(data.suggestions), setCursor(data.cursor)]);
-        return { lists: fallbackLists, items: data.items, suggestions: data.suggestions };
+        await Promise.all([saveLists(data.lists), saveItems(data.items), saveSuggestions(data.suggestions), setCursor(data.cursor)]);
+        return { lists: data.lists, items: data.items, suggestions: data.suggestions };
     } catch (err) {
         console.warn("Bootstrap failed, staying offline", err);
         return null;
@@ -75,21 +73,32 @@ async function enqueueAndPersist(item: Item, isDelete = false) {
     await addPending(mutation);
 }
 
-async function syncNow(updateItems: (items: Item[]) => void, updateSuggestions: (suggestions: Suggestion[]) => void) {
+async function enqueueListMutation(list: List, isDelete = false) {
+    await saveLists([list]);
+    const mutation: SyncMutation = isDelete
+        ? { type: "delete-list", id: list.id, updatedAt: list.updatedAt ?? Date.now() }
+        : { type: "upsert-list", list };
+    await addPending(mutation);
+}
+
+async function syncNow(updateItems: (items: Item[]) => void, updateSuggestions: (suggestions: Suggestion[]) => void, updateLists?: (lists: List[]) => void) {
     const [pending, cursor] = await Promise.all([getPending(), getCursor()]);
     const body: SyncRequest = { since: cursor || 0, mutations: pending };
     try {
         const response = await postSync(body);
         await Promise.all([
+            saveLists(response.lists),
             saveItems(response.items),
             saveSuggestions(response.suggestions),
             clearPending(),
             setCursor(response.cursor),
         ]);
         const localItems = await getItems();
+        const localLists = await getLists();
         const localSuggestions = await getSuggestions();
 
         updateItems(localItems);
+        if (updateLists) updateLists(localLists.filter(l => !l.isDeleted));
         updateSuggestions(localSuggestions);
     } catch (err) {
         const status = (err as { status?: number }).status;
@@ -129,7 +138,7 @@ async function main() {
     const local = await hydrateFromLocal();
     let suggestionState: Suggestion[] = local.suggestions;
 
-    const ui = mountUI(local.items, suggestionState, {
+    const ui = mountUI(local.lists, local.items, suggestionState, {
         onAddItem: async (listId, label) => {
             if (!ui) return;
             const now = Date.now();
@@ -158,19 +167,44 @@ async function main() {
             await saveSuggestions(suggestionState);
             ui.updateSuggestions([...suggestionState]);
 
-            await syncNow(ui.updateItems, ui.updateSuggestions);
+            await syncNow(ui.updateItems, ui.updateSuggestions, ui.updateLists);
         },
         onDeleteItem: async (item) => {
             const updated: Item = { ...item, isDeleted: true, updatedAt: Date.now() };
             await enqueueAndPersist(updated, true);
             ui.updateItems(await getItems());
-            await syncNow(ui.updateItems, ui.updateSuggestions);
+            await syncNow(ui.updateItems, ui.updateSuggestions, ui.updateLists);
         },
         onUpdateItem: async (item) => {
             const updated: Item = { ...item, updatedAt: Date.now() };
             await enqueueAndPersist(updated);
             ui.updateItems(await getItems());
-            await syncNow(ui.updateItems, ui.updateSuggestions);
+            await syncNow(ui.updateItems, ui.updateSuggestions, ui.updateLists);
+        },
+        onAddList: async (name: string) => {
+            const now = Date.now();
+            const newList: List = { id: uid(), name, updatedAt: now, isDeleted: false };
+            await enqueueListMutation(newList);
+            await syncNow(ui.updateItems, ui.updateSuggestions, ui.updateLists);
+            location.reload();
+        },
+        onUpdateList: async (list: List) => {
+            const now = Date.now();
+            const updated: List = { ...list, updatedAt: now };
+            await enqueueListMutation(updated);
+            await syncNow(ui.updateItems, ui.updateSuggestions, ui.updateLists);
+            location.reload();
+        },
+        onDeleteList: async (listId: string) => {
+            const now = Date.now();
+            const lists = await getLists();
+            const list = lists.find(l => l.id === listId);
+            if (list) {
+                const updated: List = { ...list, isDeleted: true, updatedAt: now };
+                await enqueueListMutation(updated, true);
+            }
+            await syncNow(ui.updateItems, ui.updateSuggestions, ui.updateLists);
+            location.reload();
         },
     });
 
@@ -182,6 +216,7 @@ async function main() {
     const remote = await bootstrapFromRemote();
     if (remote) {
         suggestionState = remote.suggestions;
+        ui.updateLists(remote.lists.filter(l => !l.isDeleted));
         ui.updateItems(remote.items);
         ui.updateSuggestions(remote.suggestions);
     }
@@ -189,11 +224,11 @@ async function main() {
     // Sync when coming back online
     window.addEventListener('online', () => {
         console.log('Back online, syncing now...');
-        syncNow(ui.updateItems, ui.updateSuggestions);
+        syncNow(ui.updateItems, ui.updateSuggestions, ui.updateLists);
     });
 
     // Periodic sync every 7.5 seconds
-    setInterval(() => syncNow(ui.updateItems, ui.updateSuggestions), 7500);
+    setInterval(() => syncNow(ui.updateItems, ui.updateSuggestions, ui.updateLists), 7500);
 }
 
 main().catch((err) => console.error(err));

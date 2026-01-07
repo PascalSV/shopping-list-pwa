@@ -280,6 +280,20 @@ h1 {
     min-height: 0;
 }
 
+.tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    padding: 5px 24px;
+    padding-left: 5px;
+    padding-right: 5px;
+    background: transparent;
+    border-bottom: 1px solid var(--border-light);
+}
+
 h2 {
     position: sticky;
     top: 0;
@@ -297,6 +311,26 @@ h2 {
     h2 {
         background: rgba(248, 250, 252, 0.85);
     }
+}
+
+.tab {
+    position: relative;
+    border: 1px solid var(--border);
+    background: var(--overlay-light);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: border-color 120ms ease, background 120ms ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 160px;
+}
+
+.tab.active {
+    background: rgba(22, 163, 74, 0.2);
+    border-color: rgba(22, 163, 74, 0.6);
 }
 
 .tab-name {

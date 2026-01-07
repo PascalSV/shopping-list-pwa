@@ -15,9 +15,19 @@ const itemSchema = z.object({
     isDeleted: z.boolean().optional(),
 });
 
+const listSchema = z.object({
+    id: z.string().min(1),
+    name: z.string().min(1),
+    updatedAt: z.number().int().nonnegative().optional(),
+    isDeleted: z.boolean().optional(),
+    isFavorite: z.boolean().optional(),
+});
+
 const mutationSchema = z.discriminatedUnion("type", [
     z.object({ type: z.literal("upsert-item"), item: itemSchema }),
     z.object({ type: z.literal("delete-item"), id: z.string().min(1), updatedAt: z.number().int().nonnegative() }),
+    z.object({ type: z.literal("upsert-list"), list: listSchema }),
+    z.object({ type: z.literal("delete-list"), id: z.string().min(1), updatedAt: z.number().int().nonnegative() }),
 ]);
 
 const syncSchema = z.object({
@@ -47,6 +57,18 @@ async function listItems(env: Env, since = 0): Promise<Item[]> {
         remark: row.remark ?? "",
         area: row.area ?? 0,
         done: Boolean(row.done),
+        isDeleted: Boolean(row.isDeleted),
+    }));
+}
+
+async function listLists(env: Env, since = 0): Promise<any[]> {
+    const result = await env.DB
+        .prepare("SELECT id, name, updated_at as updatedAt, is_deleted as isDeleted FROM lists WHERE updated_at >= ?")
+        .bind(since)
+        .all<any>();
+
+    return (result.results ?? []).map((row) => ({
+        ...row,
         isDeleted: Boolean(row.isDeleted),
     }));
 }
@@ -124,6 +146,39 @@ async function applyMutations(env: Env, body: SyncRequest) {
                 .bind(mutation.updatedAt, mutation.id)
                 .run();
         }
+
+        if (mutation.type === "upsert-list") {
+            const list = mutation.list;
+            const current = await env.DB
+                .prepare("SELECT updated_at, is_deleted FROM lists WHERE id = ?")
+                .bind(list.id)
+                .first<{ updated_at: number; is_deleted: number }>();
+            if (current && current.updated_at > list.updatedAt) continue;
+
+            await env.DB
+                .prepare(
+                    "INSERT INTO lists (id, name, updated_at, is_deleted, is_favorite) VALUES (?, ?, ?, ?, ?) " +
+                    "ON CONFLICT(id) DO UPDATE SET name=excluded.name, updated_at=excluded.updated_at, is_deleted=excluded.is_deleted, is_favorite=excluded.is_favorite"
+                )
+                .bind(
+                    list.id,
+                    list.name,
+                    list.updatedAt,
+                    list.isDeleted ? 1 : 0,
+                    list.isFavorite ? 1 : 0
+                )
+                .run();
+        }
+
+        if (mutation.type === "delete-list") {
+            const current = await env.DB.prepare("SELECT updated_at FROM lists WHERE id = ?").bind(mutation.id).first<{ updated_at: number }>();
+            if (current && current.updated_at > mutation.updatedAt) continue;
+
+            await env.DB
+                .prepare("UPDATE lists SET is_deleted = 1, updated_at = ? WHERE id = ?")
+                .bind(mutation.updatedAt, mutation.id)
+                .run();
+        }
     }
 }
 
@@ -140,10 +195,11 @@ router.options("/api/*", () =>
 router.get("/api/health", () => new Response("ok"));
 
 router.get("/api/bootstrap", async (_, env: Env) => {
-    const [items, suggestions] = await Promise.all([listItems(env, 0), listSuggestions(env)]);
+    const [lists, items, suggestions] = await Promise.all([listLists(env, 0), listItems(env, 0), listSuggestions(env)]);
     const cursor = Date.now();
     const payload: SyncResponse = {
         cursor,
+        lists,
         items,
         suggestions
     };
@@ -176,11 +232,12 @@ router.post("/api/sync", async (request: Request, env: Env) => {
         return json({ error: "Invalid payload", detail: `${err}` }, 400);
     }
 
+    const cursorBeforeMutations = Date.now();
     await applyMutations(env, parsed);
-    const cursor = Date.now();
-    const [items, suggestions] = await Promise.all([listItems(env, parsed.since ?? 0), listSuggestions(env)]);
+    const [lists, items, suggestions] = await Promise.all([listLists(env, parsed.since ?? 0), listItems(env, parsed.since ?? 0), listSuggestions(env)]);
     const payload: SyncResponse = {
-        cursor,
+        cursor: cursorBeforeMutations,
+        lists,
         items,
         suggestions
     };
