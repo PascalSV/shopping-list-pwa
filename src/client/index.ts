@@ -136,7 +136,8 @@ async function main() {
     await requestWakeLock();
 
     const local = await hydrateFromLocal();
-    let suggestionState: Suggestion[] = local.suggestions;
+    // Always fetch fresh suggestions from server on page load, don't use cached ones
+    let suggestionState: Suggestion[] = [];
 
     const ui = mountUI(local.lists, local.items, suggestionState, {
         onAddItem: async (listId, label) => {
