@@ -149,6 +149,9 @@ async function main() {
             );
             if (alreadyThere) {
                 showAddMessage('Der Artikel ist bereits auf der Liste');
+                // Clear input field on duplicate
+                const input = document.querySelector<HTMLInputElement>('#item-input');
+                if (input) input.value = '';
                 return false;
             }
 
