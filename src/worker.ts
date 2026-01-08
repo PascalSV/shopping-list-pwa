@@ -73,12 +73,19 @@ async function listLists(env: Env, since = 0): Promise<any[]> {
     }));
 }
 
-async function listSuggestions(env: Env, since = 0): Promise<Suggestion[]> {
+async function listSuggestions(env: Env, since?: number): Promise<Suggestion[]> {
     try {
-        const result = await env.DB
-            .prepare("SELECT label, count FROM articles WHERE updated_at >= ? ORDER BY count DESC, label ASC LIMIT 20")
-            .bind(since)
-            .all<any>();
+        // If since is undefined, return all suggestions (for bootstrap)
+        // If since is provided, only return suggestions updated after that time
+        const query = since !== undefined
+            ? "SELECT label, count FROM articles WHERE updated_at >= ? ORDER BY count DESC, label ASC LIMIT 20"
+            : "SELECT label, count FROM articles ORDER BY count DESC, label ASC LIMIT 20";
+        
+        const statement = since !== undefined
+            ? env.DB.prepare(query).bind(since)
+            : env.DB.prepare(query);
+        
+        const result = await statement.all<any>();
         return (result.results ?? []).map(row => ({
             label: row.label,
             displayLabel: row.label,
@@ -196,7 +203,7 @@ router.options("/api/*", () =>
 router.get("/api/health", () => new Response("ok"));
 
 router.get("/api/bootstrap", async (_, env: Env) => {
-    const [lists, items, suggestions] = await Promise.all([listLists(env, 0), listItems(env, 0), listSuggestions(env, 0)]);
+    const [lists, items, suggestions] = await Promise.all([listLists(env, 0), listItems(env, 0), listSuggestions(env)]);
     const cursor = Date.now();
     const payload: SyncResponse = {
         cursor,

@@ -4,12 +4,6 @@ compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
 assets = { directory = "./public" }
 
-# Cloudflare Secrets (set via: wrangler secret put <name>)
-# Required secrets:
-# - shopping-list-pwa-token-pascal: Password/token for Pascal user
-# - shopping-list-pwa-token-claudia: Password/token for Claudia user
-# These are automatically bound to env.shopping-list-pwa-token-pascal and env.shopping-list-pwa-token-claudia
-
 [[routes]]
 pattern = "shopping-list.everyday-apps.org"
 custom_domain = true
