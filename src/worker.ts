@@ -76,11 +76,11 @@ async function listLists(env: Env, since = 0): Promise<any[]> {
 async function listSuggestions(env: Env): Promise<Suggestion[]> {
     try {
         const result = await env.DB
-            .prepare("SELECT label, display_label as displayLabel, count FROM articles ORDER BY count DESC, label ASC LIMIT 20")
+            .prepare("SELECT label, count FROM articles ORDER BY count DESC, label ASC LIMIT 20")
             .all<any>();
         return (result.results ?? []).map(row => ({
             label: row.label,
-            displayLabel: row.displayLabel,
+            displayLabel: row.label,
             count: row.count
         }));
     } catch (err) {
