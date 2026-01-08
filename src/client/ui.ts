@@ -57,7 +57,7 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
             <option value="2">Backwaren</option>
             <option value="3">Milchprodukte</option>
             <option value="4">Fleisch & Wurst</option>
-            <option value="5">Asia</option>
+            <option value="5">Asia & Gewürze</option>
             <option value="6">Alkoholika</option>
             <option value="7">Haushalt & Drogerie</option>
             <option value="8">Getränke</option>

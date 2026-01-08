@@ -71,9 +71,10 @@ body {
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
-    padding-top: max(0px, env(safe-area-inset-top));
-    padding-left: max(0px, env(safe-area-inset-left));
-    padding-right: max(0px, env(safe-area-inset-right));
+    padding-top: env(safe-area-inset-top);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 .app {
@@ -90,6 +91,7 @@ header {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    padding: 16px 24px;
     background: transparent;
     border-bottom: 1px solid var(--border-light);
 }
@@ -288,6 +290,9 @@ h1 {
 }
 
 .tabs {
+    position: sticky;
+    top: 0;
+    z-index: 100;
     display: flex;
     gap: 8px;
     flex-wrap: nowrap;
@@ -297,14 +302,22 @@ h1 {
     padding: 5px 24px;
     padding-left: 5px;
     padding-right: 5px;
-    background: transparent;
+    background: rgba(11, 57, 65, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border-light);
+}
+
+@media (prefers-color-scheme: light) {
+    .tabs {
+        background: rgba(248, 250, 252, 0.95);
+    }
 }
 
 h2 {
     position: sticky;
     top: 0;
-    z-index: 50;
+    z-index: 10;
     margin: 0;
     padding: 12px;
     background: rgba(11, 57, 65, 0.85);
