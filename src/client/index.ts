@@ -140,7 +140,7 @@ async function main() {
 
     const ui = mountUI(local.lists, local.items, suggestionState, {
         onAddItem: async (listId, label) => {
-            if (!ui) return;
+            if (!ui) return false;
             const now = Date.now();
             const trimmedLabel = label.trim();
             const existingItems = await getItems();
@@ -149,7 +149,7 @@ async function main() {
             );
             if (alreadyThere) {
                 showAddMessage('Der Artikel ist bereits auf der Liste');
-                return;
+                return false;
             }
 
             const item: Item = { id: uid(), listId, label: trimmedLabel, remark: "", area: 99, done: false, updatedAt: now };
@@ -168,6 +168,7 @@ async function main() {
             ui.updateSuggestions([...suggestionState]);
 
             await syncNow(ui.updateItems, ui.updateSuggestions, ui.updateLists);
+            return true;
         },
         onDeleteItem: async (item) => {
             const updated: Item = { ...item, isDeleted: true, updatedAt: Date.now() };

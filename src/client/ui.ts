@@ -1,7 +1,7 @@
 import { Item, List, Suggestion } from "../types";
 
 export type UIHandlers = {
-    onAddItem(listId: string, label: string): Promise<void>;
+    onAddItem(listId: string, label: string): Promise<boolean>;
     onDeleteItem(item: Item): Promise<void>;
     onUpdateItem(item: Item): Promise<void>;
     onAddList(name: string): Promise<void>;
@@ -70,6 +70,15 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
         const actions = document.createElement("div");
         actions.className = "modal-actions";
 
+        const deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
+        deleteBtn.className = "button delete-btn";
+        deleteBtn.textContent = "Löschen";
+        deleteBtn.onclick = async () => {
+            overlay.remove();
+            await handlers.onDeleteItem(item);
+        };
+
         const cancel = document.createElement("button");
         cancel.type = "button";
         cancel.className = "button ghost";
@@ -91,7 +100,7 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
             renderItems();
         };
 
-        actions.append(cancel, save);
+        actions.append(deleteBtn, cancel, save);
         modal.append(title, subtitle, remarkInput, areaLabel, areaInput, actions);
         overlay.append(modal);
         document.body.appendChild(overlay);
@@ -403,11 +412,13 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
             button.className = "suggestion";
             button.textContent = `${suggestion.displayLabel}`;
             button.onclick = async () => {
-                await handlers.onAddItem(currentList, suggestion.displayLabel);
-                input.value = "";
-                suggestionsContainer.innerHTML = "";
-                renderItems();
-                input.focus();
+                const added = await handlers.onAddItem(currentList, suggestion.displayLabel);
+                if (added) {
+                    input.value = "";
+                    suggestionsContainer.innerHTML = "";
+                    renderItems();
+                    input.blur();
+                }
             };
             suggestionsContainer.appendChild(button);
         }
@@ -418,10 +429,13 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
             event.preventDefault();
             const label = input.value.trim();
             if (!label) return;
-            await handlers.onAddItem(currentList, label);
-            input.value = "";
-            suggestionsContainer.innerHTML = "";
-            renderItems();
+            const added = await handlers.onAddItem(currentList, label);
+            if (added) {
+                input.value = "";
+                suggestionsContainer.innerHTML = "";
+                renderItems();
+                input.blur();
+            }
         }
     };
 
