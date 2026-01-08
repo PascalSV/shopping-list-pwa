@@ -73,10 +73,11 @@ async function listLists(env: Env, since = 0): Promise<any[]> {
     }));
 }
 
-async function listSuggestions(env: Env): Promise<Suggestion[]> {
+async function listSuggestions(env: Env, since = 0): Promise<Suggestion[]> {
     try {
         const result = await env.DB
-            .prepare("SELECT label, count FROM articles ORDER BY count DESC, label ASC LIMIT 20")
+            .prepare("SELECT label, count FROM articles WHERE updated_at >= ? ORDER BY count DESC, label ASC LIMIT 20")
+            .bind(since)
             .all<any>();
         return (result.results ?? []).map(row => ({
             label: row.label,
@@ -93,10 +94,10 @@ async function incrementSuggestion(env: Env, label: string, displayLabel: string
     try {
         await env.DB
             .prepare(
-                "INSERT INTO articles (label, display_label, count) VALUES (?, ?, 1) " +
-                "ON CONFLICT(label) DO UPDATE SET count = articles.count + 1, display_label = excluded.display_label"
+                "INSERT INTO articles (label, count, updated_at) VALUES (?, 1, ?) " +
+                "ON CONFLICT(label) DO UPDATE SET count = articles.count + 1, updated_at = excluded.updated_at"
             )
-            .bind(label, displayLabel)
+            .bind(label, Date.now())
             .run();
     } catch (err) {
         console.warn("incrementSuggestion failed", err);
@@ -195,7 +196,7 @@ router.options("/api/*", () =>
 router.get("/api/health", () => new Response("ok"));
 
 router.get("/api/bootstrap", async (_, env: Env) => {
-    const [lists, items, suggestions] = await Promise.all([listLists(env, 0), listItems(env, 0), listSuggestions(env)]);
+    const [lists, items, suggestions] = await Promise.all([listLists(env, 0), listItems(env, 0), listSuggestions(env, 0)]);
     const cursor = Date.now();
     const payload: SyncResponse = {
         cursor,
@@ -234,7 +235,7 @@ router.post("/api/sync", async (request: Request, env: Env) => {
 
     const cursorBeforeMutations = Date.now();
     await applyMutations(env, parsed);
-    const [lists, items, suggestions] = await Promise.all([listLists(env, parsed.since ?? 0), listItems(env, parsed.since ?? 0), listSuggestions(env)]);
+    const [lists, items, suggestions] = await Promise.all([listLists(env, parsed.since ?? 0), listItems(env, parsed.since ?? 0), listSuggestions(env, parsed.since ?? 0)]);
     const payload: SyncResponse = {
         cursor: cursorBeforeMutations,
         lists,
