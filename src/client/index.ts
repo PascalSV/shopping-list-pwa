@@ -220,10 +220,13 @@ async function main() {
 
     const remote = await bootstrapFromRemote();
     if (remote) {
+        console.log('Bootstrap loaded:', remote.suggestions.length, 'suggestions');
         suggestionState = remote.suggestions;
         ui.updateLists(remote.lists.filter(l => !l.isDeleted));
         ui.updateItems(remote.items);
         ui.updateSuggestions(remote.suggestions);
+    } else {
+        console.warn('Bootstrap failed, no remote data');
     }
 
     // Sync when coming back online
