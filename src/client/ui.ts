@@ -398,10 +398,11 @@ export function mountUI(lists: List[], items: Item[], suggestions: Suggestion[],
             .map((item) => item.label.toLowerCase());
 
         console.log('Searching for:', normalized, 'in', localSuggestions.length, 'suggestions');
+        console.log('Available suggestions:', localSuggestions.map(s => `"${s.label}" (display: "${s.displayLabel}")`));
 
         const matches = localSuggestions
-            .filter((s) => s.label.toLowerCase().includes(normalized) && !itemsOnList.includes(s.label.toLowerCase()))
-            .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
+            .filter((s) => s.displayLabel.toLowerCase().includes(normalized) && !itemsOnList.includes(s.displayLabel.toLowerCase()))
+            .sort((a, b) => b.count - a.count || a.displayLabel.localeCompare(b.displayLabel))
             .slice(0, 5);
 
         console.log('Found matches:', matches);
