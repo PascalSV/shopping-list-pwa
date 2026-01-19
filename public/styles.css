@@ -87,11 +87,11 @@
     }
 
     .app {
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
         max-width: 1000px;
         margin: 0 auto;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
     }
 
     /* Header */
@@ -100,7 +100,6 @@
         background: var(--bg-primary);
         border-bottom: 1px solid var(--border-color);
         box-shadow: var(--shadow-sm);
-        flex-shrink: 0;
     }
 
     .header-content h1 {
@@ -118,7 +117,6 @@
         overflow-x: auto;
         overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
-        flex-shrink: 0;
     }
 
     .tabs {
@@ -179,8 +177,6 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
     }
 
     .content h2 {
