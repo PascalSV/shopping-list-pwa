@@ -144,8 +144,6 @@ async function main() {
             },
 
             onDeleteList: async (list) => {
-                if (!confirm(`Delete list "${list.name}"?`)) return;
-
                 const updated: List = { ...list, isDeleted: true, updatedAt: Date.now() };
                 await enqueueListMutation(updated);
                 const allLists = await getLists();

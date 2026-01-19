@@ -607,6 +607,93 @@
         min-width: 100px;
     }
 
+    /* Login */
+    .login-app {
+        min-height: 100vh;
+    }
+
+    .login-content {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+    }
+
+    .login-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        box-shadow: var(--shadow-lg);
+        padding: 24px;
+        max-width: 400px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .login-card h2 {
+        margin: 0;
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 24px;
+    }
+
+    .login-hint {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 14px;
+    }
+
+    .login-users {
+        display: flex;
+        gap: 12px;
+    }
+
+    .user-btn {
+        flex: 1;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .user-btn.active {
+        border-color: var(--accent-primary);
+        background: rgba(99, 102, 241, 0.1);
+        color: var(--accent-primary);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .login-label {
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+
+    .login-input {
+        width: 100%;
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-size: 15px;
+    }
+
+    .login-submit {
+        width: 100%;
+    }
+
+    .login-error {
+        min-height: 18px;
+        color: var(--accent-danger);
+        font-size: 14px;
+    }
+
     /* Empty state */
     .empty-state {
         text-align: center;

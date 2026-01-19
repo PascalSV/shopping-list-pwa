@@ -17,4 +17,5 @@ database_name = "shopping-list-pwa"
 database_id = "3e30b05d-55c7-46c4-b29c-da57ed26f552"
 
 [vars]
-# Environment variables will be set here
+PASCAL_PASS = "set-in-cloudflare"
+CLAUDIA_PASS = "set-in-cloudflare"

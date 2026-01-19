@@ -43,4 +43,7 @@ export type SyncResponse = {
 export type Env = {
     DB: D1Database;
     ASSETS?: Fetcher;
+    PASCAL_PASS: string;
+    CLAUDIA_PASS: string;
+    LOGIN_SECRET: string;
 };

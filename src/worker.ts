@@ -4,6 +4,9 @@ import type { Env, List, Item, Suggestion, SyncRequest, SyncResponse, SyncMutati
 
 const router = Router();
 
+const encoder = new TextEncoder();
+const SESSION_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
+
 // Validation schemas
 const syncSchema = z.object({
     since: z.number().optional(),
@@ -20,6 +23,71 @@ function generateToken(): string {
     const array = new Uint8Array(32);
     crypto.getRandomValues(array);
     return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function toBase64(data: ArrayBuffer): string {
+    const bytes = new Uint8Array(data);
+    let binary = "";
+    for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+}
+
+async function sign(secret: string, payload: string): Promise<string> {
+    const key = await crypto.subtle.importKey(
+        "raw",
+        encoder.encode(secret),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"]
+    );
+    const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
+    return toBase64(signature);
+}
+
+function safeEqual(a: string, b: string): boolean {
+    if (a.length !== b.length) return false;
+    let result = 0;
+    for (let i = 0; i < a.length; i++) {
+        result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    }
+    return result === 0;
+}
+
+async function createSession(user: string, secret: string): Promise<string> {
+    const payload = {
+        u: user,
+        exp: Date.now() + SESSION_MAX_AGE_MS
+    };
+    const payloadB64 = btoa(JSON.stringify(payload));
+    const signature = await sign(secret, payloadB64);
+    return `${payloadB64}.${signature}`;
+}
+
+async function verifySession(token: string, secret: string): Promise<string | null> {
+    const [payloadB64, signature] = token.split('.') as [string, string];
+    if (!payloadB64 || !signature) return null;
+
+    const expectedSignature = await sign(secret, payloadB64);
+    if (!safeEqual(signature, expectedSignature)) return null;
+
+    try {
+        const payload = JSON.parse(atob(payloadB64));
+        if (payload.exp && Date.now() < payload.exp && typeof payload.u === 'string') {
+            return payload.u as string;
+        }
+    } catch (err) {
+        return null;
+    }
+    return null;
+}
+
+async function authenticate(request: Request, env: Env): Promise<string | null> {
+    const cookie = request.headers.get('Cookie') || '';
+    const match = /SL_SESSION=([^;]+)/.exec(cookie);
+    if (!match) return null;
+    return verifySession(match[1], env.LOGIN_SECRET);
 }
 
 // Database query functions
@@ -181,6 +249,35 @@ async function applyMutations(env: Env, mutations: SyncMutation[]) {
 }
 
 // Routes
+router.post("/api/login", async (request: Request, env: Env) => {
+    let body: { user?: string; password?: string };
+    try {
+        body = await request.json();
+    } catch (err) {
+        return json({ error: "Invalid payload" }, 400);
+    }
+
+    const user = body.user;
+    const password = body.password;
+    if (!user || !password) {
+        return json({ error: "Missing credentials" }, 400);
+    }
+
+    const expected = user === "Pascal" ? env.PASCAL_PASS : user === "Claudia" ? env.CLAUDIA_PASS : null;
+    if (!expected || password !== expected) {
+        return json({ error: "Unauthorized" }, 401);
+    }
+
+    const token = await createSession(user, env.LOGIN_SECRET);
+    const headers = new Headers({ "Content-Type": "application/json" });
+    headers.append(
+        "Set-Cookie",
+        `SL_SESSION=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${SESSION_MAX_AGE_MS / 1000}`
+    );
+
+    return new Response(JSON.stringify({ ok: true, user }), { headers });
+});
+
 router.get("/api/bootstrap", async (_, env: Env) => {
     const [lists, items, suggestions] = await Promise.all([
         listLists(env, 0),
@@ -229,9 +326,26 @@ router.post("/api/sync", async (request: Request, env: Env) => {
 export default {
     async fetch(request: Request, env: Env): Promise<Response> {
         const url = new URL(request.url);
+        const pathname = url.pathname;
 
-        // Only handle API routes with the router
-        if (url.pathname.startsWith('/api/')) {
+        const serveAsset = () => {
+            if (env.ASSETS && "fetch" in env.ASSETS) {
+                return env.ASSETS.fetch(request);
+            }
+            return fetch(request);
+        };
+
+        // Allow login endpoint without auth
+        if (pathname === "/api/login") {
+            return router.fetch(request, env);
+        }
+
+        const user = await authenticate(request, env);
+        const isApi = pathname.startsWith('/api/');
+
+        // Protect API routes
+        if (isApi) {
+            if (!user) return json({ error: "Unauthorized" }, 401);
             try {
                 return await router.fetch(request, env);
             } catch (err) {
@@ -240,12 +354,34 @@ export default {
             }
         }
 
-        // For all other requests, serve static assets (fallback to default fetch if binding missing)
-        if (env.ASSETS && "fetch" in env.ASSETS) {
-            return env.ASSETS.fetch(request);
+        // Public assets needed for login page
+        const publicAssets = [
+            "/login",
+            "/login.html",
+            "/styles.css",
+            "/manifest.json",
+            "/icon-192.png",
+            "/icon-512.png"
+        ];
+
+        if (!user) {
+            if (pathname === "/" || pathname === "/index.html") {
+                return Response.redirect(new URL('/login.html', url), 302);
+            }
+
+            if (publicAssets.includes(pathname)) {
+                return serveAsset();
+            }
+
+            // Deny module/script loads without auth to avoid MIME errors
+            return json({ error: "Unauthorized" }, 401);
         }
 
-        // If no asset binding is available, fall back to the default fetch
-        return fetch(request);
+        // Already authenticated: send them to app instead of login
+        if (pathname === "/login" || pathname === "/login.html") {
+            return Response.redirect(new URL('/', url), 302);
+        }
+
+        return serveAsset();
     }
 };
