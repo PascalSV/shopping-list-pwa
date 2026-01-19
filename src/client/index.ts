@@ -165,19 +165,26 @@ async function main() {
     // Bootstrap from server
     try {
         const remote = await bootstrapAPI();
+        if (!remote || typeof remote !== 'object' || !Array.isArray(remote.lists)) {
+            throw new Error("Invalid bootstrap response");
+        }
         await Promise.all([
             saveLists(remote.lists),
-            saveItems(remote.items),
-            saveSuggestions(remote.suggestions),
+            saveItems(remote.items || []),
+            saveSuggestions(remote.suggestions || []),
             setCursor(remote.cursor)
         ]);
 
         ui.updateLists(remote.lists);
-        ui.updateItems(remote.items);
-        ui.updateSuggestions(remote.suggestions);
+        ui.updateItems(remote.items || []);
+        ui.updateSuggestions(remote.suggestions || []);
     } catch (err) {
         console.warn("Bootstrap failed, using offline data", err);
         const [lists, items, suggestions] = await Promise.all([getLists(), getItems(), getSuggestions()]);
+        if (!Array.isArray(lists) || !Array.isArray(items) || !Array.isArray(suggestions)) {
+            console.error("Offline data invalid", { lists, items, suggestions });
+            return;
+        }
         ui.updateLists(lists.filter(l => !l.isDeleted));
         ui.updateItems(items);
         ui.updateSuggestions(suggestions);
