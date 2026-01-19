@@ -42,4 +42,5 @@ export type SyncResponse = {
 
 export type Env = {
     DB: D1Database;
+    ASSETS: Fetcher;
 };

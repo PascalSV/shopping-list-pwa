@@ -49,6 +49,12 @@ export function mount(config: {
     const listModalCancelEl = document.querySelector<HTMLButtonElement>("#list-modal-cancel");
     const listModalCloseEl = document.querySelector<HTMLButtonElement>(".list-modal-close");
 
+    const confirmModalOverlayEl = document.querySelector<HTMLDivElement>("#confirm-modal-overlay");
+    const confirmModalEl = document.querySelector<HTMLDivElement>("#confirm-modal");
+    const confirmModalMessageEl = document.querySelector<HTMLParagraphElement>("#confirm-modal-message");
+    const confirmModalConfirmEl = document.querySelector<HTMLButtonElement>("#confirm-modal-confirm");
+    const confirmModalCancelEl = document.querySelector<HTMLButtonElement>("#confirm-modal-cancel");
+
     if (!listTabsEl || !listTitleEl || !itemsEl || !suggestionsEl || !inputEl || !cancelBtnEl || !modalOverlayEl) {
         return null;
     }
@@ -90,6 +96,34 @@ export function mount(config: {
         editingList = null;
         if (listModalOverlayEl) listModalOverlayEl.classList.add("hidden");
         if (listModalEl) listModalEl.classList.add("hidden");
+    }
+
+    function showConfirm(message: string): Promise<boolean> {
+        return new Promise((resolve) => {
+            if (confirmModalMessageEl) confirmModalMessageEl.textContent = message;
+            if (confirmModalOverlayEl) confirmModalOverlayEl.classList.remove("hidden");
+            if (confirmModalEl) confirmModalEl.classList.remove("hidden");
+
+            const handleConfirm = () => {
+                cleanup();
+                resolve(true);
+            };
+
+            const handleCancel = () => {
+                cleanup();
+                resolve(false);
+            };
+
+            const cleanup = () => {
+                if (confirmModalOverlayEl) confirmModalOverlayEl.classList.add("hidden");
+                if (confirmModalEl) confirmModalEl.classList.add("hidden");
+                if (confirmModalConfirmEl) confirmModalConfirmEl.removeEventListener("click", handleConfirm);
+                if (confirmModalCancelEl) confirmModalCancelEl.removeEventListener("click", handleCancel);
+            };
+
+            if (confirmModalConfirmEl) confirmModalConfirmEl.addEventListener("click", handleConfirm);
+            if (confirmModalCancelEl) confirmModalCancelEl.addEventListener("click", handleCancel);
+        });
     }
 
     function renderLists() {
@@ -351,10 +385,13 @@ export function mount(config: {
     }
 
     if (modalDeleteEl) {
-        modalDeleteEl.addEventListener("click", () => {
-            if (editingItem && confirm(`${i18n.deleteItem} "${editingItem.label}"?`)) {
-                handlers.onDeleteItem(editingItem);
-                hideModal();
+        modalDeleteEl.addEventListener("click", async () => {
+            if (editingItem) {
+                const confirmed = await showConfirm(`"${editingItem.label}" wirklich löschen?`);
+                if (confirmed) {
+                    handlers.onDeleteItem(editingItem);
+                    hideModal();
+                }
             }
         });
     }
@@ -381,10 +418,13 @@ export function mount(config: {
     }
 
     if (listModalDeleteEl) {
-        listModalDeleteEl.addEventListener("click", () => {
-            if (editingList && confirm(`Liste "${editingList.name}" löschen?`)) {
-                handlers.onDeleteList(editingList);
-                hideListModal();
+        listModalDeleteEl.addEventListener("click", async () => {
+            if (editingList) {
+                const confirmed = await showConfirm(`Liste "${editingList.name}" wirklich löschen?`);
+                if (confirmed) {
+                    handlers.onDeleteList(editingList);
+                    hideListModal();
+                }
             }
         });
     }

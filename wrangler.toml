@@ -9,7 +9,7 @@ enabled = true
 [[d1_databases]]
 binding = "DB"
 database_name = "shopping-list-pwa"
-database_id = "3e30b05d-55c7-46c4-b29c-da57ed26f552" 
+database_id = "3e30b05d-55c7-46c4-b29c-da57ed26f552"
 
 # Custom domain configuration
 routes = [

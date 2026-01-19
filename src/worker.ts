@@ -240,7 +240,8 @@ export default {
             }
         }
 
-        // For all other requests, return null to let the asset handler serve them
-        return new Response(null);
+        // For all other requests, pass through to let Cloudflare serve static assets
+        // By not returning a Response, the Workers platform will serve static assets
+        return env.ASSETS.fetch(request);
     }
 };

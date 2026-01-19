@@ -586,6 +586,27 @@
         background: rgba(239, 68, 68, 0.1);
     }
 
+    /* Confirmation Modal */
+    .confirm-modal .modal-content {
+        padding: 24px;
+    }
+
+    .confirm-modal .modal-content p {
+        margin: 0;
+        font-size: 16px;
+        color: var(--text-primary);
+        line-height: 1.5;
+    }
+
+    .confirm-modal .modal-actions {
+        justify-content: center;
+        gap: 16px;
+    }
+
+    .confirm-modal .modal-btn {
+        min-width: 100px;
+    }
+
     /* Empty state */
     .empty-state {
         text-align: center;
@@ -613,7 +634,7 @@
         }
 
         .content h2 {
-            padding: 16px 16px 0;
+            padding: 16px;
             font-size: 18px;
         }
 
