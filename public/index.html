@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#6366f1" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Einkaufsliste" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="stylesheet" href="/styles.css" />
+    <title>Einkaufsliste</title>
+</head>
+
+<body>
+    <main class="app">
+        <header>
+            <div class="header-content">
+                <h1>Einkaufsliste</h1>
+            </div>
+        </header>
+
+        <div class="tabs-container">
+            <div id="list-tabs" class="tabs"></div>
+        </div>
+
+        <section class="content">
+            <h2 id="list-title">Home</h2>
+            <ul id="items" class="items"></ul>
+        </section>
+
+        <div id="suggestions" class="suggestions"></div>
+
+        <section class="input-section">
+            <div class="search-input-wrapper">
+                <input id="item-input" type="text" placeholder="Was brauchst du?" autocomplete="off">
+                <button id="cancel-btn" class="cancel-btn">Löschen</button>
+            </div>
+        </section>
+    </main>
+
+    <div id="modal-overlay" class="modal-overlay hidden"></div>
+    <div id="modal" class="modal hidden">
+        <div class="modal-header">
+            <h3 id="modal-title">Artikel bearbeiten</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-content">
+            <input id="modal-label" type="text" placeholder="Artikelname" class="modal-input">
+            <textarea id="modal-remark" placeholder="Notizen..." class="modal-textarea"></textarea>
+            <div class="modal-field">
+                <label>Bereich im Geschäft:</label>
+                <select id="modal-area" class="modal-select">
+                    <option value="0">Nicht zugewiesen</option>
+                    <option value="1">Gemüse</option>
+                    <option value="2">Obst</option>
+                    <option value="3">Milchprodukte</option>
+                    <option value="4">Fleisch</option>
+                    <option value="5">Bäckerei</option>
+                    <option value="6">Tiefkühl</option>
+                    <option value="7">Getränke</option>
+                    <option value="8">Sonstiges</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button id="modal-delete" class="modal-btn delete">Löschen</button>
+            <button id="modal-cancel" class="modal-btn secondary">Abbrechen</button>
+            <button id="modal-save" class="modal-btn primary">Speichern</button>
+        </div>
+    </div>
+
+    <script type="module" src="/assets/index.js"></script>
+</body>
+
+</html>

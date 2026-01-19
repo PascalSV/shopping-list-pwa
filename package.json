@@ -1,0 +1,24 @@
+{
+    "name": "shopping-list-pwa",
+    "version": "0.1.0",
+    "description": "Multi-device shopping list PWA with offline support",
+    "scripts": {
+        "build": "npm run build:client && npm run build:sw",
+        "build:client": "esbuild src/client/index.ts --bundle --format=esm --splitting --outdir=public/assets --target=es2020",
+        "build:sw": "esbuild src/client/sw.ts --bundle --format=esm --outfile=public/sw.js --target=es2020",
+        "dev": "wrangler dev",
+        "deploy": "npm run build && wrangler deploy",
+        "migrate:local": "wrangler d1 migrations apply shopping-list-pwa --local",
+        "migrate:remote": "wrangler d1 migrations apply shopping-list-pwa --remote"
+    },
+    "devDependencies": {
+        "@cloudflare/workers-types": "^4.20241127.0",
+        "esbuild": "^0.24.0",
+        "typescript": "^5.7.2",
+        "wrangler": "^4.59.0"
+    },
+    "dependencies": {
+        "itty-router": "^4.0.0",
+        "zod": "^3.22.0"
+    }
+}
