@@ -332,7 +332,8 @@ export default {
             if (env.ASSETS && "fetch" in env.ASSETS) {
                 return env.ASSETS.fetch(request);
             }
-            return fetch(request);
+            // Avoid recursion if ASSETS binding is missing
+            return new Response("Assets binding missing", { status: 500 });
         };
 
         // Allow login endpoint without auth

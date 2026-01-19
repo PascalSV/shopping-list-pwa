@@ -1,7 +1,7 @@
 import type { List, Item, Suggestion, SyncMutation, SyncRequest, SyncResponse } from '../types';
 
 const DB_NAME = "shopping-list";
-const DB_VERSION = 1;
+const DB_VERSION = 4; // bump to match/override previous versions
 
 let db: IDBDatabase | null = null;
 
