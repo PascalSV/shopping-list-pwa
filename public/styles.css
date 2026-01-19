@@ -181,10 +181,10 @@
 
     .content h2 {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 20px;
+        font-size: 24px;
         font-weight: 600;
-        padding: 20px 24px;
-        margin: 0;
+        padding: 20px 24px 16px 24px;
+        margin: 0 0 12px 0;
         color: var(--text-primary);
         background: var(--bg-primary);
         border-bottom: 1px solid var(--border-color);
