@@ -228,19 +228,19 @@ router.post("/api/sync", async (request: Request, env: Env) => {
 
 export default {
     async fetch(request: Request, env: Env): Promise<Response> {
-        try {
-            // Try to handle with router (API routes)
-            const response = await router.fetch(request, env);
+        const url = new URL(request.url);
 
-            // If router returns 404, let the request pass through to asset handler
-            if (response.status === 404) {
-                return new Response("Not Found", { status: 404 });
+        // Only handle API routes with the router
+        if (url.pathname.startsWith('/api/')) {
+            try {
+                return await router.fetch(request, env);
+            } catch (err) {
+                console.error("Worker error:", err);
+                return json({ error: "Internal server error" }, 500);
             }
-
-            return response;
-        } catch (err) {
-            console.error("Worker error:", err);
-            return json({ error: "Internal server error" }, 500);
         }
+
+        // For all other requests, return null to let the asset handler serve them
+        return new Response(null);
     }
 };
