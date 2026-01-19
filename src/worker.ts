@@ -240,8 +240,12 @@ export default {
             }
         }
 
-        // For all other requests, pass through to let Cloudflare serve static assets
-        // By not returning a Response, the Workers platform will serve static assets
-        return env.ASSETS.fetch(request);
+        // For all other requests, serve static assets (fallback to default fetch if binding missing)
+        if (env.ASSETS && "fetch" in env.ASSETS) {
+            return env.ASSETS.fetch(request);
+        }
+
+        // If no asset binding is available, fall back to the default fetch
+        return fetch(request);
     }
 };

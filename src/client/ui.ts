@@ -49,6 +49,13 @@ export function mount(config: {
     const listModalCancelEl = document.querySelector<HTMLButtonElement>("#list-modal-cancel");
     const listModalCloseEl = document.querySelector<HTMLButtonElement>(".list-modal-close");
 
+    const createListModalOverlayEl = document.querySelector<HTMLDivElement>("#create-list-modal-overlay");
+    const createListModalEl = document.querySelector<HTMLDivElement>("#create-list-modal");
+    const createListModalNameEl = document.querySelector<HTMLInputElement>("#create-list-modal-name");
+    const createListModalSaveEl = document.querySelector<HTMLButtonElement>("#create-list-modal-save");
+    const createListModalCancelEl = document.querySelector<HTMLButtonElement>("#create-list-modal-cancel");
+    const createListModalCloseEl = document.querySelector<HTMLButtonElement>(".create-list-modal-close");
+
     const confirmModalOverlayEl = document.querySelector<HTMLDivElement>("#confirm-modal-overlay");
     const confirmModalEl = document.querySelector<HTMLDivElement>("#confirm-modal");
     const confirmModalMessageEl = document.querySelector<HTMLParagraphElement>("#confirm-modal-message");
@@ -96,6 +103,19 @@ export function mount(config: {
         editingList = null;
         if (listModalOverlayEl) listModalOverlayEl.classList.add("hidden");
         if (listModalEl) listModalEl.classList.add("hidden");
+    }
+
+    function showCreateListModal() {
+        if (createListModalNameEl) createListModalNameEl.value = "";
+        if (createListModalOverlayEl) createListModalOverlayEl.classList.remove("hidden");
+        if (createListModalEl) createListModalEl.classList.remove("hidden");
+        if (createListModalNameEl) createListModalNameEl.focus();
+    }
+
+    function hideCreateListModal() {
+        if (createListModalOverlayEl) createListModalOverlayEl.classList.add("hidden");
+        if (createListModalEl) createListModalEl.classList.add("hidden");
+        if (createListModalNameEl) createListModalNameEl.value = "";
     }
 
     function showConfirm(message: string): Promise<boolean> {
@@ -187,10 +207,7 @@ export function mount(config: {
         addBtn.className = "tab-add";
         addBtn.textContent = i18n.addList;
         addBtn.onclick = () => {
-            const name = prompt(i18n.newListName);
-            if (name) {
-                handlers.onAddList(name);
-            }
+            showCreateListModal();
         };
         listTabsEl.appendChild(addBtn);
 
@@ -437,6 +454,37 @@ export function mount(config: {
         listModalCloseEl.addEventListener("click", hideListModal);
     }
 
+    // Create list modal handlers
+    if (createListModalSaveEl) {
+        createListModalSaveEl.addEventListener("click", () => {
+            const name = createListModalNameEl?.value.trim();
+            if (name) {
+                handlers.onAddList(name);
+                hideCreateListModal();
+            }
+        });
+    }
+
+    if (createListModalNameEl) {
+        createListModalNameEl.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                const name = createListModalNameEl.value.trim();
+                if (name) {
+                    handlers.onAddList(name);
+                    hideCreateListModal();
+                }
+            }
+        });
+    }
+
+    if (createListModalCancelEl) {
+        createListModalCancelEl.addEventListener("click", hideCreateListModal);
+    }
+
+    if (createListModalCloseEl) {
+        createListModalCloseEl.addEventListener("click", hideCreateListModal);
+    }
+
     // Initial render
     renderLists();
     renderItems();
@@ -460,3 +508,5 @@ export function mount(config: {
         }
     };
 }
+
+
