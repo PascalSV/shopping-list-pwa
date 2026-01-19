@@ -226,27 +226,18 @@ router.post("/api/sync", async (request: Request, env: Env) => {
     return json(payload);
 });
 
-router.get("/", async (request: Request, env: Env) => {
-    // Serve the index.html file
-    const htmlFile = await env.ASSETS.fetch(new Request("https://example.com/index.html", request));
-    if (htmlFile.status === 200) {
-        return new Response(htmlFile.body, {
-            status: 200,
-            headers: {
-                "Content-Type": "text/html",
-                "Cache-Control": "public, max-age=3600"
-            }
-        });
-    }
-    return routerError(404);
-});
-
-router.all("*", () => routerError(404));
-
 export default {
     async fetch(request: Request, env: Env): Promise<Response> {
         try {
-            return await router.fetch(request, env);
+            // Try to handle with router (API routes)
+            const response = await router.fetch(request, env);
+
+            // If router returns 404, let the request pass through to asset handler
+            if (response.status === 404) {
+                return new Response("Not Found", { status: 404 });
+            }
+
+            return response;
         } catch (err) {
             console.error("Worker error:", err);
             return json({ error: "Internal server error" }, 500);
