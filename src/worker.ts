@@ -241,23 +241,6 @@ router.get("/", async (request: Request, env: Env) => {
     return routerError(404);
 });
 
-// Handle static assets (CSS, JS, manifest, etc.)
-router.get("/assets/*", (request: Request, env: Env) => {
-    return env.ASSETS.fetch(request);
-});
-
-router.get("/styles.css", (request: Request, env: Env) => {
-    return env.ASSETS.fetch(request);
-});
-
-router.get("/manifest.json", (request: Request, env: Env) => {
-    return env.ASSETS.fetch(request);
-});
-
-router.get("/sw.js", (request: Request, env: Env) => {
-    return env.ASSETS.fetch(request);
-});
-
 router.all("*", () => routerError(404));
 
 export default {

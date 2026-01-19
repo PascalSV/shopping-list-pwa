@@ -15,6 +15,7 @@ export type Handlers = {
     onDeleteItem: (item: Item) => void;
     onEditItem: (item: Item, label: string, remark: string) => void;
     onAddList: (name: string) => void;
+    onEditList: (list: List, newName: string) => void;
     onDeleteList: (list: List) => void;
     onSwitchList: (listId: string) => void;
 };
@@ -40,6 +41,14 @@ export function mount(config: {
     const modalCancelEl = document.querySelector<HTMLButtonElement>("#modal-cancel");
     const modalCloseEl = document.querySelector<HTMLButtonElement>(".modal-close");
 
+    const listModalOverlayEl = document.querySelector<HTMLDivElement>("#list-modal-overlay");
+    const listModalEl = document.querySelector<HTMLDivElement>("#list-modal");
+    const listModalNameEl = document.querySelector<HTMLInputElement>("#list-modal-name");
+    const listModalSaveEl = document.querySelector<HTMLButtonElement>("#list-modal-save");
+    const listModalDeleteEl = document.querySelector<HTMLButtonElement>("#list-modal-delete");
+    const listModalCancelEl = document.querySelector<HTMLButtonElement>("#list-modal-cancel");
+    const listModalCloseEl = document.querySelector<HTMLButtonElement>(".list-modal-close");
+
     if (!listTabsEl || !listTitleEl || !itemsEl || !suggestionsEl || !inputEl || !cancelBtnEl || !modalOverlayEl) {
         return null;
     }
@@ -48,6 +57,7 @@ export function mount(config: {
     let items = [...config.items];
     let suggestions = [...config.suggestions];
     let currentListId = lists[0]?.id || "";
+    let editingList: List | null = null;
     let editingItem: Item | null = null;
     let longPressTimer: number | undefined;
 
@@ -68,6 +78,20 @@ export function mount(config: {
         if (modalEl) modalEl.classList.add("hidden");
     }
 
+    function showListModal(list: List) {
+        editingList = list;
+        if (listModalNameEl) listModalNameEl.value = list.name;
+        if (listModalOverlayEl) listModalOverlayEl.classList.remove("hidden");
+        if (listModalEl) listModalEl.classList.remove("hidden");
+        if (listModalNameEl) listModalNameEl.focus();
+    }
+
+    function hideListModal() {
+        editingList = null;
+        if (listModalOverlayEl) listModalOverlayEl.classList.add("hidden");
+        if (listModalEl) listModalEl.classList.add("hidden");
+    }
+
     function renderLists() {
         listTabsEl.innerHTML = "";
 
@@ -78,17 +102,47 @@ export function mount(config: {
                 tab.classList.add("active");
             }
             tab.textContent = list.name;
+
+            let tabLongPressTimer: number | undefined;
+            let tabTouchStart = 0;
+
             tab.onclick = () => {
-                currentListId = list.id;
-                handlers.onSwitchList(list.id);
-                renderLists();
-                renderItems();
+                const duration = Date.now() - tabTouchStart;
+                if (duration < 500) {
+                    currentListId = list.id;
+                    handlers.onSwitchList(list.id);
+                    renderLists();
+                    renderItems();
+                }
             };
 
-            // Right click to delete
+            // Long press to edit
+            tab.addEventListener("touchstart", (e) => {
+                tabTouchStart = Date.now();
+                tabLongPressTimer = window.setTimeout(() => {
+                    e.preventDefault();
+                    showListModal(list);
+                }, 500);
+            });
+
+            tab.addEventListener("touchend", () => {
+                if (tabLongPressTimer) clearTimeout(tabLongPressTimer);
+            });
+
+            tab.addEventListener("touchmove", () => {
+                if (tabLongPressTimer) clearTimeout(tabLongPressTimer);
+            });
+
+            // Double click to edit on desktop
+            tab.addEventListener("dblclick", (e) => {
+                e.preventDefault();
+                showListModal(list);
+            });
+
+            // Right click to edit
             tab.oncontextmenu = (e) => {
                 e.preventDefault();
-                handlers.onDeleteList(list);
+                showListModal(list);
             };
 
             listTabsEl.appendChild(tab);
@@ -311,6 +365,36 @@ export function mount(config: {
 
     if (modalCloseEl) {
         modalCloseEl.addEventListener("click", hideModal);
+    }
+
+    // List modal event listeners
+    if (listModalSaveEl) {
+        listModalSaveEl.addEventListener("click", () => {
+            if (editingList && listModalNameEl) {
+                const newName = listModalNameEl.value.trim();
+                if (newName && newName !== editingList.name) {
+                    handlers.onEditList(editingList, newName);
+                }
+                hideListModal();
+            }
+        });
+    }
+
+    if (listModalDeleteEl) {
+        listModalDeleteEl.addEventListener("click", () => {
+            if (editingList && confirm(`Liste "${editingList.name}" löschen?`)) {
+                handlers.onDeleteList(editingList);
+                hideListModal();
+            }
+        });
+    }
+
+    if (listModalCancelEl) {
+        listModalCancelEl.addEventListener("click", hideListModal);
+    }
+
+    if (listModalCloseEl) {
+        listModalCloseEl.addEventListener("click", hideListModal);
     }
 
     // Initial render

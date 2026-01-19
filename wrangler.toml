@@ -11,5 +11,10 @@ binding = "DB"
 database_name = "shopping-list-pwa"
 database_id = "3e30b05d-55c7-46c4-b29c-da57ed26f552" 
 
+# Custom domain configuration
+routes = [
+  { pattern = "shopping-list.everyday-apps.org", custom_domain = true }
+]
+
 [vars]
 # Environment variables will be set here

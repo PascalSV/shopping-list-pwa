@@ -71,6 +71,22 @@
         </div>
     </div>
 
+    <div id="list-modal-overlay" class="modal-overlay hidden"></div>
+    <div id="list-modal" class="modal hidden">
+        <div class="modal-header">
+            <h3>Liste bearbeiten</h3>
+            <button class="list-modal-close modal-close">&times;</button>
+        </div>
+        <div class="modal-content">
+            <input id="list-modal-name" type="text" placeholder="Listenname" class="modal-input">
+        </div>
+        <div class="modal-actions">
+            <button id="list-modal-delete" class="modal-btn delete">Löschen</button>
+            <button id="list-modal-cancel" class="modal-btn secondary">Abbrechen</button>
+            <button id="list-modal-save" class="modal-btn primary">Speichern</button>
+        </div>
+    </div>
+
     <script type="module" src="/assets/index.js"></script>
 </body>
 

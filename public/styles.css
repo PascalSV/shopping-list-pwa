@@ -175,8 +175,9 @@
     /* Content */
     .content {
         flex: 1;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
     }
 
     .content h2 {
@@ -187,19 +188,21 @@
         margin: 0;
         color: var(--text-primary);
         background: var(--bg-primary);
-        position: sticky;
-        top: 0;
-        z-index: 100;
         border-bottom: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        flex-shrink: 0;
     }
 
     /* Items list */
     .items {
         list-style: none;
-        padding: 12px 24px;
+        padding: 12px 24px 24px 24px;
         display: flex;
         flex-direction: column;
         gap: 8px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        flex: 1;
     }
 
     .item {

@@ -132,6 +132,17 @@ async function main() {
                 await syncNow(ui.updateItems, ui.updateSuggestions, ui.updateLists);
             },
 
+            onEditList: async (list, newName) => {
+                const trimmed = newName.trim();
+                if (!trimmed) return;
+
+                const updated: List = { ...list, name: trimmed, updatedAt: Date.now() };
+                await enqueueListMutation(updated);
+                const allLists = await getLists();
+                ui.updateLists(allLists.filter(l => !l.isDeleted));
+                await syncNow(ui.updateItems, ui.updateSuggestions, ui.updateLists);
+            },
+
             onDeleteList: async (list) => {
                 if (!confirm(`Delete list "${list.name}"?`)) return;
 
